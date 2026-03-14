@@ -1,0 +1,11 @@
+namespace PadInspector.Models;
+
+public class InspectionResult
+{
+    public int Id { get; set; }
+    public DateTime Timestamp { get; set; } = DateTime.Now;
+    public bool IsPass { get; set; }
+    public string Description { get; set; } = string.Empty;
+    public double Score { get; set; }
+    public string ImagePath { get; set; } = string.Empty;
+}

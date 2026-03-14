@@ -1,0 +1,29 @@
+namespace PadInspector.Models;
+
+/// <summary>
+/// 검사 레시피 - 촬상 대상별 파라미터 세트
+/// </summary>
+public class Recipe
+{
+    public string Name { get; set; } = "Default";
+    public string Description { get; set; } = "";
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime ModifiedAt { get; set; } = DateTime.Now;
+
+    // 카메라 파라미터
+    public string PixelFormat { get; set; } = "Mono8";
+    public string TriggerMode { get; set; } = "On";
+    public string TriggerSource { get; set; } = "Line0";
+    public int ExposureTimeUs { get; set; } = 500;
+    public int GainDb { get; set; } = 0;
+
+    // 검사 파라미터
+    public double ThresholdValue { get; set; } = 128;
+    public double MinAreaRatio { get; set; } = 0.01;
+    public double MaxAreaRatio { get; set; } = 0.5;
+    public double PassScoreThreshold { get; set; } = 5.0;
+
+    // IO 파라미터
+    public int TriggerChannel { get; set; } = 0;
+    public int TriggerIntervalMs { get; set; } = 2000;
+}
