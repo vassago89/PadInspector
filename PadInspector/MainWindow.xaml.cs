@@ -8,21 +8,26 @@ namespace PadInspector;
 public partial class MainWindow : Window
 {
     private readonly DispatcherTimer _clock;
+    private readonly NotifyCollectionChangedEventHandler _logScrollHandler;
 
     public MainWindow(MainViewModel viewModel)
     {
         InitializeComponent();
         DataContext = viewModel;
-        Closed += (_, _) =>
-        {
-            _clock.Stop();
-            viewModel.Dispose();
-        };
 
-        ((INotifyCollectionChanged)viewModel.LogService.Messages).CollectionChanged += (_, _) =>
+        _logScrollHandler = (_, _) =>
         {
             if (LogListBox.Items.Count > 0)
                 LogListBox.ScrollIntoView(LogListBox.Items[^1]);
+        };
+
+        ((INotifyCollectionChanged)viewModel.LogService.Messages).CollectionChanged += _logScrollHandler;
+
+        Closed += (_, _) =>
+        {
+            _clock.Stop();
+            ((INotifyCollectionChanged)viewModel.LogService.Messages).CollectionChanged -= _logScrollHandler;
+            viewModel.Dispose();
         };
 
         _clock = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };

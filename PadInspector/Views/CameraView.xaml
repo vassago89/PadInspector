@@ -77,7 +77,7 @@
             <TextBlock Grid.Row="1" Text="{Binding Name}" FontSize="48" Opacity="0.04"
                        HorizontalAlignment="Center" VerticalAlignment="Center"
                        FontWeight="Bold" IsHitTestVisible="False"
-                       Visibility="{Binding Image, TargetNullValue=Visible, FallbackValue=Collapsed}"/>
+                       Visibility="{Binding Image, Converter={StaticResource NullToCollapsed}}"/>
 
             <!-- PASS/FAIL overlay -->
             <Border Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Bottom"

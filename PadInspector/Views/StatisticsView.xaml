@@ -31,6 +31,13 @@
                 </Button>
                 <Button Content="{DynamicResource S.ExportReport}" Style="{StaticResource PillButton}"
                         Command="{Binding ExportReportCommand}"/>
+                <Rectangle Width="1" Height="12" Fill="{StaticResource MutedBrush}" Opacity="0.3" Margin="8,0"/>
+                <Button Content="{DynamicResource S.All}" Style="{StaticResource PillButton}" Margin="0,0,3,0"
+                        Command="{Binding SetCameraFilterCommand}" CommandParameter="All"/>
+                <Button Content="CAM1" Style="{StaticResource PillButton}" Margin="0,0,3,0"
+                        Command="{Binding SetCameraFilterCommand}" CommandParameter="Camera1"/>
+                <Button Content="CAM2" Style="{StaticResource PillButton}"
+                        Command="{Binding SetCameraFilterCommand}" CommandParameter="Camera2"/>
             </StackPanel>
 
             <ListView ItemsSource="{Binding FilteredResults}" FontSize="11" BorderThickness="0"

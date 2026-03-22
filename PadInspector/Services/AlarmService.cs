@@ -25,7 +25,7 @@ public class AlarmService : IAlarmService
 
     public void CheckResult(string cameraName, bool isPass)
     {
-        if (!_settings.Enabled) return;
+        if (!_settings.Enabled || _settings.ConsecutiveNgThreshold <= 0) return;
 
         _consecutiveNgCounts.TryAdd(cameraName, 0);
 
