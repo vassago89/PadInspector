@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <StackPanel>
         <!-- Image Save -->
-        <TextBlock Text="Image Save" FontWeight="SemiBold" FontSize="12" Opacity="0.9" Margin="0,0,0,6"/>
+        <TextBlock Text="Image Save" Style="{StaticResource SectionTitle}"/>
         <CheckBox Content="Enabled" IsChecked="{Binding ImageSaveEnabled}" Margin="0,0,0,4"/>
         <Grid Margin="0,0,0,4">
             <Grid.ColumnDefinitions>
@@ -14,7 +14,7 @@
             <CheckBox Grid.Column="0" Content="Save OK" IsChecked="{Binding SaveOk}"/>
             <CheckBox Grid.Column="2" Content="Save NG" IsChecked="{Binding SaveNg}"/>
         </Grid>
-        <TextBlock Text="Path" FontSize="10" Opacity="0.35" Margin="0,0,0,2"/>
+        <TextBlock Text="Path" Style="{StaticResource FieldLabel}"/>
         <TextBox Text="{Binding ImageSavePath, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,4"/>
         <Grid Margin="0,0,0,4">
             <Grid.ColumnDefinitions>
@@ -27,24 +27,24 @@
                 <RowDefinition Height="2"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <TextBlock Grid.Row="0" Grid.Column="0" Text="Format" FontSize="10" Opacity="0.35"/>
-            <TextBlock Grid.Row="0" Grid.Column="2" Text="Max Days" FontSize="10" Opacity="0.35"/>
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Format" Style="{StaticResource FieldLabel}"/>
+            <TextBlock Grid.Row="0" Grid.Column="2" Text="Max Days" Style="{StaticResource FieldLabel}"/>
             <TextBox Grid.Row="2" Grid.Column="0" Text="{Binding ImageFormat, UpdateSourceTrigger=PropertyChanged}"/>
             <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding MaxDaysToKeep, UpdateSourceTrigger=PropertyChanged}"/>
         </Grid>
 
-        <Separator Margin="0,10,0,10"/>
+        <Separator Margin="0,10,0,10" Opacity="0.3"/>
 
         <!-- Alarm -->
-        <TextBlock Text="Alarm" FontWeight="SemiBold" FontSize="12" Opacity="0.9" Margin="0,0,0,6"/>
+        <TextBlock Text="Alarm" Style="{StaticResource SectionTitle}"/>
         <CheckBox Content="Enabled" IsChecked="{Binding AlarmEnabled}" Margin="0,0,0,4"/>
-        <TextBlock Text="Consecutive NG Threshold" FontSize="10" Opacity="0.35" Margin="0,0,0,2"/>
+        <TextBlock Text="Consecutive NG Threshold" Style="{StaticResource FieldLabel}"/>
         <TextBox Text="{Binding ConsecutiveNgThreshold, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,4"/>
 
-        <Separator Margin="0,10,0,10"/>
+        <Separator Margin="0,10,0,10" Opacity="0.3"/>
 
         <!-- Log -->
-        <TextBlock Text="Log" FontWeight="SemiBold" FontSize="12" Opacity="0.9" Margin="0,0,0,6"/>
+        <TextBlock Text="Log" Style="{StaticResource SectionTitle}"/>
         <Grid Margin="0,0,0,4">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
@@ -52,23 +52,23 @@
             </Grid.ColumnDefinitions>
             <CheckBox Grid.Column="0" Content="File Log" IsChecked="{Binding EnableFileLog}"/>
             <StackPanel Grid.Column="1">
-                <TextBlock Text="Max Lines" FontSize="10" Opacity="0.35"/>
+                <TextBlock Text="Max Lines" Style="{StaticResource FieldLabel}"/>
                 <TextBox Text="{Binding MaxLogLines, UpdateSourceTrigger=PropertyChanged}"/>
             </StackPanel>
         </Grid>
 
-        <Separator Margin="0,10,0,10"/>
+        <Separator Margin="0,10,0,10" Opacity="0.3"/>
 
         <!-- CSV Log -->
-        <TextBlock Text="CSV Log" FontWeight="SemiBold" FontSize="12" Opacity="0.9" Margin="0,0,0,6"/>
+        <TextBlock Text="CSV Log" Style="{StaticResource SectionTitle}"/>
         <CheckBox Content="Enabled" IsChecked="{Binding CsvLogEnabled}" Margin="0,0,0,4"/>
-        <TextBlock Text="Path" FontSize="10" Opacity="0.35" Margin="0,0,0,2"/>
+        <TextBlock Text="Path" Style="{StaticResource FieldLabel}"/>
         <TextBox Text="{Binding CsvLogPath, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,6"/>
 
         <!-- Save Button -->
         <Button Content="{DynamicResource S.Save}" Command="{Binding SaveSettingsCommand}"
-                Padding="8,6" HorizontalContentAlignment="Center" Margin="0,6,0,0"/>
-        <TextBlock Text="* Restart required" FontSize="9" Opacity="0.3" Margin="0,4,0,0"
-                   HorizontalAlignment="Center"/>
+                Padding="8,6" HorizontalContentAlignment="Center" Margin="0,8,0,0"/>
+        <TextBlock Text="* Restart required" FontSize="9" Foreground="{StaticResource MutedBrush}"
+                   Margin="0,4,0,0" HorizontalAlignment="Center"/>
     </StackPanel>
 </UserControl>

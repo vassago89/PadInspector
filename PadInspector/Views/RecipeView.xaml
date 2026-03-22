@@ -4,7 +4,7 @@
     <StackPanel>
 
         <!-- Recipe Selector -->
-        <TextBlock Text="{DynamicResource S.Recipe}" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,8" Opacity="0.9"/>
+        <TextBlock Text="{DynamicResource S.Recipe}" Style="{StaticResource SectionTitle}"/>
         <ComboBox ItemsSource="{Binding Names}"
                   SelectedItem="{Binding SelectedName}" Margin="0,0,0,8"/>
 
@@ -19,8 +19,8 @@
                 <RowDefinition Height="3"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <TextBlock Grid.Row="0" Grid.Column="0" Text="{DynamicResource S.Name}" FontSize="10" Opacity="0.35"/>
-            <TextBlock Grid.Row="0" Grid.Column="2" Text="{DynamicResource S.Description}" FontSize="10" Opacity="0.35"/>
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="{DynamicResource S.Name}" Style="{StaticResource FieldLabel}"/>
+            <TextBlock Grid.Row="0" Grid.Column="2" Text="{DynamicResource S.Description}" Style="{StaticResource FieldLabel}"/>
             <TextBox Grid.Row="2" Grid.Column="0"
                      Text="{Binding RecipeName, UpdateSourceTrigger=PropertyChanged}"/>
             <TextBox Grid.Row="2" Grid.Column="2"
@@ -34,21 +34,26 @@
                 <ColumnDefinition Width="4"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <Button Grid.Column="0" Content="{DynamicResource S.Save}" Command="{Binding SaveCommand}" Padding="4,5" HorizontalContentAlignment="Center"/>
-            <Button Grid.Column="2" Content="{DynamicResource S.SaveAs}" Command="{Binding SaveAsCommand}" Padding="4,5" HorizontalContentAlignment="Center"/>
-            <Button Grid.Column="4" Content="{DynamicResource S.Delete}" Command="{Binding DeleteCommand}" Padding="4,5" HorizontalContentAlignment="Center"/>
+            <Button Grid.Column="0" Content="{DynamicResource S.Save}" Command="{Binding SaveCommand}"
+                    Padding="4,5" HorizontalContentAlignment="Center"/>
+            <Button Grid.Column="2" Content="{DynamicResource S.SaveAs}" Command="{Binding SaveAsCommand}"
+                    Padding="4,5" HorizontalContentAlignment="Center"/>
+            <Button Grid.Column="4" Content="{DynamicResource S.Delete}" Command="{Binding DeleteCommand}"
+                    Padding="4,5" HorizontalContentAlignment="Center"/>
         </Grid>
-        <Grid Margin="0,6,0,0">
+        <Grid Margin="0,4,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="4"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <Button Grid.Column="0" Content="{DynamicResource S.Import}" Command="{Binding ImportCommand}" Padding="4,5" HorizontalContentAlignment="Center"/>
-            <Button Grid.Column="2" Content="{DynamicResource S.Export}" Command="{Binding ExportCommand}" Padding="4,5" HorizontalContentAlignment="Center"/>
+            <Button Grid.Column="0" Content="{DynamicResource S.Import}" Command="{Binding ImportCommand}"
+                    Padding="4,5" HorizontalContentAlignment="Center"/>
+            <Button Grid.Column="2" Content="{DynamicResource S.Export}" Command="{Binding ExportCommand}"
+                    Padding="4,5" HorizontalContentAlignment="Center"/>
         </Grid>
 
-        <Separator Margin="0,14,0,14"/>
+        <Separator Margin="0,14,0,14" Opacity="0.3"/>
 
         <!-- Inspection Params -->
         <Expander Header="{DynamicResource S.InspectionParams}" IsExpanded="True">
@@ -71,20 +76,20 @@
                     <RowDefinition Height="3"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Threshold" FontSize="10" Opacity="0.35"/>
-                <TextBlock Grid.Row="0" Grid.Column="2" Text="Pass Score (%)" FontSize="10" Opacity="0.35"/>
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Threshold" Style="{StaticResource FieldLabel}"/>
+                <TextBlock Grid.Row="0" Grid.Column="2" Text="Pass Score (%)" Style="{StaticResource FieldLabel}"/>
                 <TextBox Grid.Row="2" Grid.Column="0"
                          Text="{Binding Threshold, UpdateSourceTrigger=PropertyChanged}"/>
                 <TextBox Grid.Row="2" Grid.Column="2"
                          Text="{Binding PassScore, UpdateSourceTrigger=PropertyChanged}"/>
-                <TextBlock Grid.Row="4" Grid.Column="0" Text="Min Area" FontSize="10" Opacity="0.35"/>
-                <TextBlock Grid.Row="4" Grid.Column="2" Text="Max Area" FontSize="10" Opacity="0.35"/>
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Min Area" Style="{StaticResource FieldLabel}"/>
+                <TextBlock Grid.Row="4" Grid.Column="2" Text="Max Area" Style="{StaticResource FieldLabel}"/>
                 <TextBox Grid.Row="6" Grid.Column="0"
                          Text="{Binding MinArea, UpdateSourceTrigger=PropertyChanged}"/>
                 <TextBox Grid.Row="6" Grid.Column="2"
                          Text="{Binding MaxArea, UpdateSourceTrigger=PropertyChanged}"/>
-                <TextBlock Grid.Row="8" Grid.Column="0" Text="Exposure (us)" FontSize="10" Opacity="0.35"/>
-                <TextBlock Grid.Row="8" Grid.Column="2" Text="Gain (dB)" FontSize="10" Opacity="0.35"/>
+                <TextBlock Grid.Row="8" Grid.Column="0" Text="Exposure (us)" Style="{StaticResource FieldLabel}"/>
+                <TextBlock Grid.Row="8" Grid.Column="2" Text="Gain (dB)" Style="{StaticResource FieldLabel}"/>
                 <TextBox Grid.Row="10" Grid.Column="0"
                          Text="{Binding Exposure, UpdateSourceTrigger=PropertyChanged}"/>
                 <TextBox Grid.Row="10" Grid.Column="2"
@@ -95,7 +100,8 @@
         <!-- ROI -->
         <Expander Header="ROI (0~1)" Margin="0,6,0,0">
             <StackPanel Margin="0,10,0,0">
-                <TextBlock Text="CAM1" FontSize="11" FontWeight="SemiBold" Opacity="0.7" Margin="0,0,0,4"/>
+                <TextBlock Text="CAM1" FontSize="11" FontWeight="SemiBold"
+                           Foreground="{StaticResource SubtextBrush}" Margin="0,0,0,4"/>
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -107,16 +113,17 @@
                         <RowDefinition Height="8"/>
                         <RowDefinition Height="Auto"/><RowDefinition Height="3"/><RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="X" FontSize="10" Opacity="0.35"/>
-                    <TextBlock Grid.Row="0" Grid.Column="2" Text="Y" FontSize="10" Opacity="0.35"/>
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="X" Style="{StaticResource FieldLabel}"/>
+                    <TextBlock Grid.Row="0" Grid.Column="2" Text="Y" Style="{StaticResource FieldLabel}"/>
                     <TextBox Grid.Row="2" Grid.Column="0" Text="{Binding Cam1RoiX, UpdateSourceTrigger=PropertyChanged}"/>
                     <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding Cam1RoiY, UpdateSourceTrigger=PropertyChanged}"/>
-                    <TextBlock Grid.Row="4" Grid.Column="0" Text="W" FontSize="10" Opacity="0.35"/>
-                    <TextBlock Grid.Row="4" Grid.Column="2" Text="H" FontSize="10" Opacity="0.35"/>
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="W" Style="{StaticResource FieldLabel}"/>
+                    <TextBlock Grid.Row="4" Grid.Column="2" Text="H" Style="{StaticResource FieldLabel}"/>
                     <TextBox Grid.Row="6" Grid.Column="0" Text="{Binding Cam1RoiW, UpdateSourceTrigger=PropertyChanged}"/>
                     <TextBox Grid.Row="6" Grid.Column="2" Text="{Binding Cam1RoiH, UpdateSourceTrigger=PropertyChanged}"/>
                 </Grid>
-                <TextBlock Text="CAM2" FontSize="11" FontWeight="SemiBold" Opacity="0.7" Margin="0,12,0,4"/>
+                <TextBlock Text="CAM2" FontSize="11" FontWeight="SemiBold"
+                           Foreground="{StaticResource SubtextBrush}" Margin="0,12,0,4"/>
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -128,12 +135,12 @@
                         <RowDefinition Height="8"/>
                         <RowDefinition Height="Auto"/><RowDefinition Height="3"/><RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="X" FontSize="10" Opacity="0.35"/>
-                    <TextBlock Grid.Row="0" Grid.Column="2" Text="Y" FontSize="10" Opacity="0.35"/>
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="X" Style="{StaticResource FieldLabel}"/>
+                    <TextBlock Grid.Row="0" Grid.Column="2" Text="Y" Style="{StaticResource FieldLabel}"/>
                     <TextBox Grid.Row="2" Grid.Column="0" Text="{Binding Cam2RoiX, UpdateSourceTrigger=PropertyChanged}"/>
                     <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding Cam2RoiY, UpdateSourceTrigger=PropertyChanged}"/>
-                    <TextBlock Grid.Row="4" Grid.Column="0" Text="W" FontSize="10" Opacity="0.35"/>
-                    <TextBlock Grid.Row="4" Grid.Column="2" Text="H" FontSize="10" Opacity="0.35"/>
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="W" Style="{StaticResource FieldLabel}"/>
+                    <TextBlock Grid.Row="4" Grid.Column="2" Text="H" Style="{StaticResource FieldLabel}"/>
                     <TextBox Grid.Row="6" Grid.Column="0" Text="{Binding Cam2RoiW, UpdateSourceTrigger=PropertyChanged}"/>
                     <TextBox Grid.Row="6" Grid.Column="2" Text="{Binding Cam2RoiH, UpdateSourceTrigger=PropertyChanged}"/>
                 </Grid>

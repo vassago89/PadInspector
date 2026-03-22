@@ -1,11 +1,14 @@
 using System.Collections.Specialized;
 using System.Windows;
+using System.Windows.Threading;
 using PadInspector.ViewModels;
 
 namespace PadInspector;
 
 public partial class MainWindow : Window
 {
+    private readonly DispatcherTimer _clock;
+
     public MainWindow(MainViewModel viewModel)
     {
         InitializeComponent();
@@ -17,6 +20,11 @@ public partial class MainWindow : Window
             if (LogListBox.Items.Count > 0)
                 LogListBox.ScrollIntoView(LogListBox.Items[^1]);
         };
+
+        _clock = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        _clock.Tick += (_, _) => ClockText.Text = DateTime.Now.ToString("yyyy-MM-dd  HH:mm:ss");
+        _clock.Start();
+        ClockText.Text = DateTime.Now.ToString("yyyy-MM-dd  HH:mm:ss");
     }
 
     private void OnKoreanClick(object sender, RoutedEventArgs e) => App.SetLanguage("ko");

@@ -13,16 +13,27 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- TOP BAR -->
-        <Border Grid.Row="0" Padding="16,8,16,8" Background="#0AFFFFFF"
+        <!-- ═══ TOP BAR ═══ -->
+        <Border Grid.Row="0" Padding="16,10,16,10"
+                Background="{StaticResource ElevatedBg}"
                 BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
             <DockPanel>
                 <!-- App Title + Run Controls -->
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
-                    <TextBlock Text="PAD INSPECTOR" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"
-                               Opacity="0.5" Margin="0,0,24,0"/>
+                    <!-- Logo Mark -->
+                    <Border Width="32" Height="32" CornerRadius="8" Margin="0,0,12,0"
+                            VerticalAlignment="Center" Background="{StaticResource AccentBg}">
+                        <TextBlock Text="PI" FontSize="13" FontWeight="Bold"
+                                   Foreground="{StaticResource AccentBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Text="PAD INSPECTOR" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"
+                               Foreground="{StaticResource MutedBrush}" Margin="0,0,24,0"/>
+
+                    <!-- Start Button -->
                     <Button Padding="20,7" Margin="0,0,4,0" FontSize="13" FontWeight="SemiBold"
-                            Background="#0F7B3F" Foreground="White" HorizontalContentAlignment="Center"
+                            Background="{StaticResource StartBtnBg}" Foreground="White"
+                            HorizontalContentAlignment="Center"
                             Command="{Binding StartCommand}"
                             IsEnabled="{Binding IsRunning, Converter={StaticResource InverseBool}}">
                         <StackPanel Orientation="Horizontal">
@@ -30,94 +41,141 @@
                             <TextBlock Text="{DynamicResource S.Start}"/>
                         </StackPanel>
                     </Button>
+
+                    <!-- Stop Button -->
                     <Button Padding="20,7" Margin="0,0,4,0" FontSize="13" FontWeight="SemiBold"
-                            Background="#C42B1C" Foreground="White" HorizontalContentAlignment="Center"
+                            Background="{StaticResource StopBtnBg}" Foreground="White"
+                            HorizontalContentAlignment="Center"
                             Command="{Binding StopCommand}" IsEnabled="{Binding IsRunning}">
                         <StackPanel Orientation="Horizontal">
-                            <Rectangle Width="9" Height="9" Fill="White" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <Rectangle Width="9" Height="9" Fill="White" RadiusX="1" RadiusY="1"
+                                       Margin="0,0,8,0" VerticalAlignment="Center"/>
                             <TextBlock Text="{DynamicResource S.Stop}"/>
                         </StackPanel>
                     </Button>
+
+                    <!-- Manual Trigger -->
                     <Button Content="{DynamicResource S.ManualTrigger}" Padding="14,7" FontSize="12"
                             Command="{Binding ManualTriggerCommand}" HorizontalContentAlignment="Center"
                             IsEnabled="{Binding IsRunning}"/>
-                    <Rectangle Width="1" Fill="{DynamicResource ControlStrokeColorDefaultBrush}" Margin="20,4"/>
+
+                    <!-- Separator + Status -->
+                    <Rectangle Width="1" Fill="{DynamicResource ControlStrokeColorDefaultBrush}" Margin="20,6"/>
+
+                    <!-- Running Indicator -->
                     <Border Width="10" Height="10" CornerRadius="5" Margin="0,0,8,0" VerticalAlignment="Center"
-                            Background="{Binding IsRunning, Converter={StaticResource BoolToColor}}"/>
-                    <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center" FontSize="12" Opacity="0.5"/>
+                            Background="{Binding IsRunning, Converter={StaticResource BoolToColor}}">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard x:Name="PulseStoryboard">
+                                                <Storyboard RepeatBehavior="Forever">
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                     From="1" To="0.3" Duration="0:0:0.8"
+                                                                     AutoReverse="True"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <StopStoryboard BeginStoryboardName="PulseStoryboard"/>
+                                        </DataTrigger.ExitActions>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                    </Border>
+                    <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center"
+                               FontSize="12" Foreground="{StaticResource MutedBrush}"/>
                 </StackPanel>
 
                 <!-- Stats -->
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
                     <!-- Total -->
-                    <Border Padding="14,4" Margin="4,0" CornerRadius="6" Background="#08FFFFFF">
+                    <Border Style="{StaticResource StatCard}" Background="{StaticResource NeutralBg}">
                         <StackPanel HorizontalAlignment="Center">
-                            <TextBlock Text="TOTAL" FontSize="9" HorizontalAlignment="Center"
-                                       Opacity="0.35" FontWeight="SemiBold"/>
-                            <TextBlock Text="{Binding Statistics.TotalCount}" FontSize="30" FontWeight="Bold"
-                                       HorizontalAlignment="Center" Margin="0,-2,0,0"/>
+                            <TextBlock Text="TOTAL" Style="{StaticResource StatLabel}"/>
+                            <TextBlock Text="{Binding Statistics.TotalCount}" Style="{StaticResource StatValue}"/>
                         </StackPanel>
                     </Border>
                     <!-- Pass -->
-                    <Border Padding="14,4" Margin="4,0" CornerRadius="6" Background="#0A4CAF50">
+                    <Border Style="{StaticResource StatCard}" Background="{StaticResource SuccessBg}">
                         <StackPanel HorizontalAlignment="Center">
-                            <TextBlock Text="PASS" FontSize="9" HorizontalAlignment="Center"
-                                       Foreground="#4CAF50" FontWeight="SemiBold"/>
-                            <TextBlock Text="{Binding Statistics.PassCount}" FontSize="30" FontWeight="Bold"
-                                       HorizontalAlignment="Center" Foreground="#4CAF50" Margin="0,-2,0,0"/>
+                            <TextBlock Text="PASS" Style="{StaticResource StatLabel}"
+                                       Foreground="{StaticResource SuccessBrush}" Opacity="1"/>
+                            <TextBlock Text="{Binding Statistics.PassCount}" Style="{StaticResource StatValue}"
+                                       Foreground="{StaticResource SuccessBrush}"/>
                         </StackPanel>
                     </Border>
                     <!-- Fail -->
-                    <Border Padding="14,4" Margin="4,0" CornerRadius="6" Background="#0AF44336">
+                    <Border Style="{StaticResource StatCard}" Background="{StaticResource DangerBg}">
                         <StackPanel HorizontalAlignment="Center">
-                            <TextBlock Text="FAIL" FontSize="9" HorizontalAlignment="Center"
-                                       Foreground="#F44336" FontWeight="SemiBold"/>
-                            <TextBlock Text="{Binding Statistics.FailCount}" FontSize="30" FontWeight="Bold"
-                                       HorizontalAlignment="Center" Foreground="#F44336" Margin="0,-2,0,0"/>
+                            <TextBlock Text="FAIL" Style="{StaticResource StatLabel}"
+                                       Foreground="{StaticResource DangerBrush}" Opacity="1"/>
+                            <TextBlock Text="{Binding Statistics.FailCount}" Style="{StaticResource StatValue}"
+                                       Foreground="{StaticResource DangerBrush}"/>
                         </StackPanel>
                     </Border>
                     <!-- Yield -->
-                    <Border Padding="14,4" Margin="4,0,12,0" CornerRadius="6" Background="#0A2196F3">
+                    <Border Style="{StaticResource StatCard}" Background="{StaticResource AccentBg}"
+                            Margin="3,0,12,0">
                         <StackPanel HorizontalAlignment="Center">
-                            <TextBlock Text="YIELD" FontSize="9" HorizontalAlignment="Center"
-                                       Foreground="#64B5F6" FontWeight="SemiBold"/>
-                            <TextBlock FontSize="30" FontWeight="Bold" HorizontalAlignment="Center"
-                                       Foreground="#64B5F6" Margin="0,-2,0,0">
+                            <TextBlock Text="YIELD" Style="{StaticResource StatLabel}"
+                                       Foreground="{StaticResource AccentBrush}" Opacity="1"/>
+                            <TextBlock Style="{StaticResource StatValue}" Foreground="{StaticResource AccentBrush}">
                                 <Run Text="{Binding Statistics.PassRate, Mode=OneWay}"/><Run Text="%"/>
                             </TextBlock>
                         </StackPanel>
                     </Border>
-                    <Button Content="{DynamicResource S.Reset}" Padding="10,6" VerticalAlignment="Center"
-                            FontSize="11" Command="{Binding ResetCountCommand}"/>
+                    <Button Content="{DynamicResource S.Reset}" Style="{StaticResource PillButton}"
+                            VerticalAlignment="Center" Command="{Binding ResetCountCommand}"/>
                 </StackPanel>
             </DockPanel>
         </Border>
 
-        <!-- Alarm Banner -->
+        <!-- ═══ ALARM BANNER ═══ -->
         <Border Grid.Row="1" Panel.ZIndex="99"
                 VerticalAlignment="Top" HorizontalAlignment="Center"
-                Margin="0,10,0,0" Padding="28,12" CornerRadius="10">
+                Margin="0,12,0,0" Padding="28,12" CornerRadius="12">
+            <Border.Effect>
+                <DropShadowEffect Color="#DC2626" BlurRadius="24" ShadowDepth="0" Opacity="0.5"/>
+            </Border.Effect>
             <Border.Style>
                 <Style TargetType="Border">
-                    <Setter Property="Background" Value="#E8C42B1C"/>
+                    <Setter Property="Background" Value="{StaticResource AlarmBg}"/>
                     <Setter Property="Visibility" Value="Collapsed"/>
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding IsAlarm}" Value="True">
                             <Setter Property="Visibility" Value="Visible"/>
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard x:Name="AlarmPulse">
+                                    <Storyboard RepeatBehavior="Forever">
+                                        <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                         From="1" To="0.7" Duration="0:0:0.5"
+                                                         AutoReverse="True"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="AlarmPulse"/>
+                            </DataTrigger.ExitActions>
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>
             </Border.Style>
             <StackPanel Orientation="Horizontal">
+                <TextBlock Text="⚠" FontSize="18" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
                 <TextBlock Text="ALARM" FontSize="16" Foreground="White" FontWeight="Bold"
                            Margin="0,0,14,0" VerticalAlignment="Center"/>
                 <TextBlock Text="{Binding AlarmMessage}" Foreground="#DDFFFFFF"
                            FontSize="14" VerticalAlignment="Center" Margin="0,0,18,0"/>
-                <Button Content="{DynamicResource S.AlarmClear}" Command="{Binding ClearAlarmCommand}" Padding="16,5"/>
+                <Button Content="{DynamicResource S.AlarmClear}" Command="{Binding ClearAlarmCommand}"
+                        Padding="16,5" FontWeight="SemiBold"/>
             </StackPanel>
         </Border>
 
-        <!-- MAIN -->
+        <!-- ═══ MAIN CONTENT ═══ -->
         <Grid Grid.Row="1" Margin="8,8,8,6">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="250"/>
@@ -125,26 +183,24 @@
                 <ColumnDefinition Width="300"/>
             </Grid.ColumnDefinitions>
 
-            <!-- LEFT: Settings -->
-            <Border BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                    BorderThickness="1" CornerRadius="8" Padding="14,12" Margin="0,0,4,0"
-                    Background="#08FFFFFF">
+            <!-- ── LEFT: Controls ── -->
+            <Border Style="{StaticResource CardPanel}" Margin="0,0,4,0">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="-2,0,-2,0">
                     <StackPanel>
                         <!-- Camera -->
-                        <TextBlock Text="{DynamicResource S.Camera}" FontWeight="SemiBold" FontSize="13" Opacity="0.9" Margin="0,0,0,8"/>
+                        <TextBlock Text="{DynamicResource S.Camera}" Style="{StaticResource SectionTitle}"/>
                         <Grid Margin="0,0,0,8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="4"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Button Grid.Column="0" Content="{DynamicResource S.Connect}" Padding="8,6" HorizontalContentAlignment="Center"
-                                    Command="{Binding ConnectCamerasCommand}"/>
-                            <Button Grid.Column="2" Content="{DynamicResource S.Disconnect}" Padding="8,6" HorizontalContentAlignment="Center"
-                                    Command="{Binding DisconnectCamerasCommand}"/>
+                            <Button Grid.Column="0" Content="{DynamicResource S.Connect}" Padding="8,6"
+                                    HorizontalContentAlignment="Center" Command="{Binding ConnectCamerasCommand}"/>
+                            <Button Grid.Column="2" Content="{DynamicResource S.Disconnect}" Padding="8,6"
+                                    HorizontalContentAlignment="Center" Command="{Binding DisconnectCamerasCommand}"/>
                         </Grid>
-                        <Grid Margin="2,0,0,0">
+                        <Grid Margin="2,0,0,2">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
@@ -152,33 +208,35 @@
                             <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                                 <Border Width="8" Height="8" CornerRadius="4" Margin="0,0,6,0"
                                         Background="{Binding Camera1.IsConnected, Converter={StaticResource BoolToColor}}"/>
-                                <TextBlock Text="CAM1" FontSize="11" VerticalAlignment="Center" Opacity="0.7"/>
+                                <TextBlock Text="CAM1" FontSize="11" VerticalAlignment="Center"
+                                           Foreground="{StaticResource MutedBrush}"/>
                             </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                 <Border Width="8" Height="8" CornerRadius="4" Margin="0,0,6,0"
                                         Background="{Binding Camera2.IsConnected, Converter={StaticResource BoolToColor}}"/>
-                                <TextBlock Text="CAM2" FontSize="11" VerticalAlignment="Center" Opacity="0.7"/>
+                                <TextBlock Text="CAM2" FontSize="11" VerticalAlignment="Center"
+                                           Foreground="{StaticResource MutedBrush}"/>
                             </StackPanel>
                         </Grid>
 
-                        <Separator Margin="0,14,0,14"/>
+                        <Separator Margin="0,14,0,14" Opacity="0.3"/>
 
                         <!-- Recipe View -->
                         <ContentControl Content="{Binding Recipe}"/>
 
-                        <Separator Margin="0,14,0,14"/>
+                        <Separator Margin="0,14,0,14" Opacity="0.3"/>
 
                         <!-- Auto Trigger -->
                         <Expander Header="{DynamicResource S.AutoTrigger}">
                             <StackPanel Margin="0,10,0,0">
                                 <CheckBox Content="{DynamicResource S.UseAutoTrigger}" Margin="0,0,0,10"
                                           IsChecked="{Binding AutoTrigger}"/>
-                                <TextBlock Text="{DynamicResource S.IntervalMs}" FontSize="10" Opacity="0.35" Margin="0,0,0,3"/>
+                                <TextBlock Text="{DynamicResource S.IntervalMs}" Style="{StaticResource FieldLabel}"/>
                                 <TextBox Text="{Binding Recipe.TriggerInterval, UpdateSourceTrigger=PropertyChanged}"/>
                             </StackPanel>
                         </Expander>
 
-                        <Separator Margin="0,14,0,14"/>
+                        <Separator Margin="0,14,0,14" Opacity="0.3"/>
 
                         <!-- Settings -->
                         <Expander Header="Settings">
@@ -188,7 +246,7 @@
                 </ScrollViewer>
             </Border>
 
-            <!-- CENTER -->
+            <!-- ── CENTER ── -->
             <Grid Grid.Column="1" Margin="4,0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
@@ -222,14 +280,13 @@
                               ResizeDirection="Rows" Background="Transparent"/>
 
                 <!-- Log -->
-                <Border Grid.Row="4" CornerRadius="8"
-                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1"
-                        Padding="12,8,12,6" Background="#08FFFFFF">
+                <Border Grid.Row="4" Style="{StaticResource CardPanel}" Padding="12,8,12,6">
                     <DockPanel>
                         <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
-                            <TextBlock Text="{DynamicResource S.Log}" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center" Opacity="0.7"/>
-                            <Button DockPanel.Dock="Right" Content="{DynamicResource S.Clear}" Padding="12,3" FontSize="11"
-                                    HorizontalAlignment="Right" Command="{Binding ClearLogCommand}"/>
+                            <TextBlock Text="{DynamicResource S.Log}" Style="{StaticResource SectionTitle}" Margin="0"/>
+                            <Button DockPanel.Dock="Right" Content="{DynamicResource S.Clear}"
+                                    Style="{StaticResource PillButton}" HorizontalAlignment="Right"
+                                    Command="{Binding ClearLogCommand}"/>
                         </DockPanel>
                         <ListBox x:Name="LogListBox" ItemsSource="{Binding LogService.Messages}"
                                  FontFamily="Cascadia Mono,Consolas,Courier New" FontSize="11"
@@ -238,7 +295,7 @@
                             <ListBox.ItemContainerStyle>
                                 <Style TargetType="ListBoxItem">
                                     <Setter Property="Padding" Value="4,2"/>
-                                    <Setter Property="Opacity" Value="0.75"/>
+                                    <Setter Property="Foreground" Value="{StaticResource SubtextBrush}"/>
                                 </Style>
                             </ListBox.ItemContainerStyle>
                         </ListBox>
@@ -246,30 +303,40 @@
                 </Border>
             </Grid>
 
-            <!-- RIGHT: Statistics -->
+            <!-- ── RIGHT: Statistics ── -->
             <ContentControl Grid.Column="2" Content="{Binding Statistics}" Margin="4,0,0,0"
                             HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
         </Grid>
 
-        <!-- STATUS BAR -->
-        <Border Grid.Row="2" Padding="14,5" Background="#06FFFFFF"
+        <!-- ═══ STATUS BAR ═══ -->
+        <Border Grid.Row="2" Padding="14,6" Background="{StaticResource ElevatedBg}"
                 BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="0,1,0,0">
             <DockPanel>
-                <TextBlock DockPanel.Dock="Left" Text="Pad Inspector v1.0" FontSize="10" Opacity="0.25"
-                           VerticalAlignment="Center"/>
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Pad Inspector v1.0" FontSize="10"
+                               Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center"/>
+                    <Rectangle Width="1" Height="10" Fill="{StaticResource MutedBrush}"
+                               Opacity="0.3" Margin="12,0"/>
+                    <TextBlock x:Name="ClockText" FontSize="10"
+                               Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center"/>
+                </StackPanel>
+
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right"
                             VerticalAlignment="Center">
-                    <TextBlock FontSize="10" Opacity="0.35" VerticalAlignment="Center" Margin="0,0,16,0">
+                    <TextBlock FontSize="10" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center"
+                               Margin="0,0,16,0">
                         <Run Text="Total:"/><Run Text="{Binding Statistics.TotalCount, Mode=OneWay}"/>
                         <Run Text="  Pass:"/><Run Text="{Binding Statistics.PassCount, Mode=OneWay}"/>
                         <Run Text="  Fail:"/><Run Text="{Binding Statistics.FailCount, Mode=OneWay}"/>
                         <Run Text="  Yield:"/><Run Text="{Binding Statistics.PassRate, Mode=OneWay}"/><Run Text="%"/>
                     </TextBlock>
-                    <Button Content="Theme" Padding="6,2" FontSize="10" Margin="0,0,8,0"
+                    <Rectangle Width="1" Height="10" Fill="{StaticResource MutedBrush}"
+                               Opacity="0.3" Margin="0,0,12,0"/>
+                    <Button Content="Theme" Padding="8,3" FontSize="10" Margin="0,0,6,0"
                             Click="OnToggleThemeClick"/>
-                    <Button Content="KO" Padding="6,2" FontSize="10" Margin="0,0,2,0"
+                    <Button Content="KO" Padding="8,3" FontSize="10" Margin="0,0,3,0"
                             Click="OnKoreanClick"/>
-                    <Button Content="EN" Padding="6,2" FontSize="10"
+                    <Button Content="EN" Padding="8,3" FontSize="10"
                             Click="OnEnglishClick"/>
                 </StackPanel>
             </DockPanel>

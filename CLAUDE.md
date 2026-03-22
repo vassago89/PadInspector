@@ -42,9 +42,10 @@ PadInspector/
 │   └── RecipeSettings.cs       BasePath, DefaultRecipeName
 ├── Converters/       # BoolToColor, BoolToPassFail, InverseBool
 ├── Models/           # Recipe, InspectionResult, IOSignal, RoiRect
-├── Resources/        # Localization
+├── Resources/        # Localization + Styles
 │   ├── Strings.ko.xaml         Korean strings
-│   └── Strings.en.xaml         English strings
+│   ├── Strings.en.xaml         English strings
+│   └── Styles.xaml             Color palette, reusable styles (ActionButton, CardPanel, StatCard)
 ├── Services/         # Interfaces + implementations (12 pairs)
 │   ├── ICameraService / HikCameraService         (CancellationToken grab loop)
 │   ├── ICameraServiceFactory / HikCameraServiceFactory
@@ -94,13 +95,17 @@ All services and ViewModels are resolved through the DI container in `App.xaml.c
 - **IO channel mapping**: Camera pass/fail output channels configured in `IOSettings`, consumed by `IOOutputService`
 - **Camera**: HikCameraService wraps MvCameraControl.Net SDK. Finds cameras by SerialNumber. IO trigger: Line0 RisingEdge. Real-time Exposure/Gain control via `SetExposure`/`SetGain`
 - **ROI**: Ratio-based (0~1) coordinates in Recipe. Applied in InspectionService.CropRoi()
-- **Theme**: WPF .NET 10 Fluent dark/light toggle (`ThemeMode`). Uses `{DynamicResource ControlStrokeColorDefaultBrush}`
+- **Theme**: WPF .NET 10 Fluent dark/light toggle (`ThemeMode`). Custom color palette in `Styles.xaml` (AccentBrush, SuccessBrush, DangerBrush etc.)
+- **UI styles**: `Styles.xaml` defines reusable styles (ActionButton, CardPanel, StatCard, SectionTitle, FieldLabel, PillButton, ResultRow) + color resources
+- **Status animations**: Running indicator pulse, camera connected pulse, alarm banner pulse via Storyboard DataTriggers
+- **Status bar clock**: `DispatcherTimer` in MainWindow.xaml.cs updates real-time clock every second
 - **Localization**: KO/EN runtime switch via `App.SetLanguage()`, ResourceDictionary with `{DynamicResource S.xxx}` keys
 - **Result filtering**: StatisticsViewModel uses `ICollectionView` with filter predicate (All/Pass/Fail)
 - **Recipe import/export**: JSON file dialog in RecipeViewModel
 - **Settings UI**: SettingsViewModel edits appsettings.json directly (restart required for reload)
 - **Error handling**: MainViewModel shows MessageBox on camera connect / inspection start failures
 - **Frozen brushes**: YieldChart uses `static readonly` + `Freeze()` brushes to avoid per-redraw allocations
+- **Camera status badge**: LIVE (green) / OFFLINE (red) pill badge with pulse animation in CameraView header
 
 ### Dependencies
 
