@@ -357,8 +357,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         finally
         {
             _processLock.Release();
-            if (!camera.IsConnected)
-                image.Dispose();
+            image.Dispose();
         }
     }
 

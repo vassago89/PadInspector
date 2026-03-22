@@ -74,21 +74,29 @@ public partial class SettingsViewModel : ObservableObject
             var json = File.ReadAllText(SettingsPath);
             var doc = JsonNode.Parse(json) ?? new JsonObject();
 
-            doc["ImageSave"]!["Enabled"] = ImageSaveEnabled;
-            doc["ImageSave"]!["SaveOk"] = SaveOk;
-            doc["ImageSave"]!["SaveNg"] = SaveNg;
-            doc["ImageSave"]!["BasePath"] = ImageSavePath;
-            doc["ImageSave"]!["Format"] = ImageFormat;
-            doc["ImageSave"]!["MaxDaysToKeep"] = MaxDaysToKeep;
+            var imgSave = doc["ImageSave"]?.AsObject() ?? new JsonObject();
+            imgSave["Enabled"] = ImageSaveEnabled;
+            imgSave["SaveOk"] = SaveOk;
+            imgSave["SaveNg"] = SaveNg;
+            imgSave["BasePath"] = ImageSavePath;
+            imgSave["Format"] = ImageFormat;
+            imgSave["MaxDaysToKeep"] = MaxDaysToKeep;
+            doc["ImageSave"] = imgSave;
 
-            doc["Alarm"]!["Enabled"] = AlarmEnabled;
-            doc["Alarm"]!["ConsecutiveNgThreshold"] = ConsecutiveNgThreshold;
+            var alarm = doc["Alarm"]?.AsObject() ?? new JsonObject();
+            alarm["Enabled"] = AlarmEnabled;
+            alarm["ConsecutiveNgThreshold"] = ConsecutiveNgThreshold;
+            doc["Alarm"] = alarm;
 
-            doc["Log"]!["MaxLogLines"] = MaxLogLines;
-            doc["Log"]!["EnableFileLog"] = EnableFileLog;
+            var log = doc["Log"]?.AsObject() ?? new JsonObject();
+            log["MaxLogLines"] = MaxLogLines;
+            log["EnableFileLog"] = EnableFileLog;
+            doc["Log"] = log;
 
-            doc["CsvLog"]!["Enabled"] = CsvLogEnabled;
-            doc["CsvLog"]!["BasePath"] = CsvLogPath;
+            var csvLog = doc["CsvLog"]?.AsObject() ?? new JsonObject();
+            csvLog["Enabled"] = CsvLogEnabled;
+            csvLog["BasePath"] = CsvLogPath;
+            doc["CsvLog"] = csvLog;
 
             var options = new JsonSerializerOptions { WriteIndented = true };
             var content = doc.ToJsonString(options);
@@ -96,8 +104,7 @@ public partial class SettingsViewModel : ObservableObject
             // 원자적 쓰기: 임시 파일에 쓴 후 교체 (손상 방지)
             var tempPath = SettingsPath + ".tmp";
             File.WriteAllText(tempPath, content);
-            File.Copy(tempPath, SettingsPath, overwrite: true);
-            File.Delete(tempPath);
+            File.Move(tempPath, SettingsPath, overwrite: true);
 
             _logService.Log("INFO", "설정 저장 완료 (재시작 후 적용)");
         }

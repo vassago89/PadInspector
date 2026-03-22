@@ -15,6 +15,7 @@ public class VirtualIOService : IIOService
     private readonly bool[] _inputs;
     private readonly bool[] _outputs;
     private readonly object _lock = new();
+    private readonly object _timerLock = new();
     private Timer? _autoTriggerTimer;
     private bool _isRunning;
 
@@ -78,18 +79,24 @@ public class VirtualIOService : IIOService
     public void StartAutoTrigger(int intervalMs = 0)
     {
         if (intervalMs <= 0) intervalMs = _settings.DefaultTriggerIntervalMs;
-        _autoTriggerTimer?.Dispose();
-        _autoTriggerTimer = new Timer(_ =>
+        lock (_timerLock)
         {
-            foreach (var ch in _settings.AutoTriggerChannels)
-                FireTrigger(ch);
-        }, null, 0, intervalMs);
+            _autoTriggerTimer?.Dispose();
+            _autoTriggerTimer = new Timer(_ =>
+            {
+                foreach (var ch in _settings.AutoTriggerChannels)
+                    FireTrigger(ch);
+            }, null, 0, intervalMs);
+        }
     }
 
     public void StopAutoTrigger()
     {
-        _autoTriggerTimer?.Dispose();
-        _autoTriggerTimer = null;
+        lock (_timerLock)
+        {
+            _autoTriggerTimer?.Dispose();
+            _autoTriggerTimer = null;
+        }
     }
 
     public void SetOutput(int channel, bool value)
