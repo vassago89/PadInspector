@@ -8,6 +8,7 @@ public class ImageCleanupService : IImageCleanupService
 {
     private readonly ImageSaveSettings _settings;
     private readonly ILogService _logService;
+    private readonly object _timerLock = new();
     private Timer? _timer;
     private readonly string _basePath;
 
@@ -22,13 +23,19 @@ public class ImageCleanupService : IImageCleanupService
 
     public void Start()
     {
-        // 시작 시 한번 실행, 이후 24시간 간격
-        _timer = new Timer(_ => CleanupOldImages(), null, TimeSpan.Zero, TimeSpan.FromHours(24));
+        lock (_timerLock)
+        {
+            _timer?.Dispose();
+            _timer = new Timer(_ => CleanupOldImages(), null, TimeSpan.Zero, TimeSpan.FromHours(24));
+        }
     }
 
     public void Stop()
     {
-        _timer?.Change(Timeout.Infinite, Timeout.Infinite);
+        lock (_timerLock)
+        {
+            _timer?.Change(Timeout.Infinite, Timeout.Infinite);
+        }
     }
 
     public int CleanupOldImages()
@@ -69,7 +76,10 @@ public class ImageCleanupService : IImageCleanupService
 
     public void Dispose()
     {
-        _timer?.Dispose();
-        _timer = null;
+        lock (_timerLock)
+        {
+            _timer?.Dispose();
+            _timer = null;
+        }
     }
 }

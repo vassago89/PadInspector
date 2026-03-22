@@ -9,6 +9,7 @@ public class DiskMonitorService : IDiskMonitorService
     private const long LowDiskThresholdMB = 1024; // 1GB
     private readonly ILogService _logService;
     private readonly string _monitorPath;
+    private readonly object _timerLock = new();
     private Timer? _timer;
     private bool _alerted;
 
@@ -29,13 +30,20 @@ public class DiskMonitorService : IDiskMonitorService
 
     public void Start()
     {
-        CheckDiskSpace();
-        _timer = new Timer(_ => CheckDiskSpace(), null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
+        lock (_timerLock)
+        {
+            _timer?.Dispose();
+            CheckDiskSpace();
+            _timer = new Timer(_ => CheckDiskSpace(), null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
+        }
     }
 
     public void Stop()
     {
-        _timer?.Change(Timeout.Infinite, Timeout.Infinite);
+        lock (_timerLock)
+        {
+            _timer?.Change(Timeout.Infinite, Timeout.Infinite);
+        }
     }
 
     private void CheckDiskSpace()
@@ -65,7 +73,10 @@ public class DiskMonitorService : IDiskMonitorService
 
     public void Dispose()
     {
-        _timer?.Dispose();
-        _timer = null;
+        lock (_timerLock)
+        {
+            _timer?.Dispose();
+            _timer = null;
+        }
     }
 }

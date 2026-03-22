@@ -138,8 +138,15 @@ public class HikCameraService : ICameraService
             int height = (int)image.Height;
 
             byte[] pixelData = image.PixelData;
+            int expectedSize = width * height;
+            if (pixelData.Length < expectedSize)
+            {
+                _logService.Log("ERR", $"[{_config.Name}] 픽셀 데이터 크기 불일치: expected={expectedSize}, actual={pixelData.Length}");
+                return null;
+            }
+
             var mat = new Mat(height, width, MatType.CV_8UC1);
-            Marshal.Copy(pixelData, 0, mat.Data, pixelData.Length);
+            Marshal.Copy(pixelData, 0, mat.Data, expectedSize);
             return mat;
         }
         catch (Exception ex)

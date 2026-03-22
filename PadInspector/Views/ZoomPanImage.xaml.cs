@@ -12,7 +12,15 @@ public partial class ZoomPanImage : UserControl
 
     public static readonly DependencyProperty SourceProperty =
         DependencyProperty.Register(nameof(Source), typeof(BitmapSource), typeof(ZoomPanImage),
-            new PropertyMetadata(null, (d, e) => ((ZoomPanImage)d).Img.Source = (BitmapSource?)e.NewValue));
+            new PropertyMetadata(null, (d, e) =>
+            {
+                var ctrl = (ZoomPanImage)d;
+                ctrl.Img.Source = (BitmapSource?)e.NewValue;
+                ctrl.ScaleT.ScaleX = 1;
+                ctrl.ScaleT.ScaleY = 1;
+                ctrl.TranslateT.X = 0;
+                ctrl.TranslateT.Y = 0;
+            }));
 
     public BitmapSource? Source
     {
