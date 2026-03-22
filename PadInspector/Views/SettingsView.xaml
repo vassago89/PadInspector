@@ -1,0 +1,74 @@
+<UserControl x:Class="PadInspector.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel>
+        <!-- Image Save -->
+        <TextBlock Text="Image Save" FontWeight="SemiBold" FontSize="12" Opacity="0.9" Margin="0,0,0,6"/>
+        <CheckBox Content="Enabled" IsChecked="{Binding ImageSaveEnabled}" Margin="0,0,0,4"/>
+        <Grid Margin="0,0,0,4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="4"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <CheckBox Grid.Column="0" Content="Save OK" IsChecked="{Binding SaveOk}"/>
+            <CheckBox Grid.Column="2" Content="Save NG" IsChecked="{Binding SaveNg}"/>
+        </Grid>
+        <TextBlock Text="Path" FontSize="10" Opacity="0.35" Margin="0,0,0,2"/>
+        <TextBox Text="{Binding ImageSavePath, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,4"/>
+        <Grid Margin="0,0,0,4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="6"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="2"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Format" FontSize="10" Opacity="0.35"/>
+            <TextBlock Grid.Row="0" Grid.Column="2" Text="Max Days" FontSize="10" Opacity="0.35"/>
+            <TextBox Grid.Row="2" Grid.Column="0" Text="{Binding ImageFormat, UpdateSourceTrigger=PropertyChanged}"/>
+            <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding MaxDaysToKeep, UpdateSourceTrigger=PropertyChanged}"/>
+        </Grid>
+
+        <Separator Margin="0,10,0,10"/>
+
+        <!-- Alarm -->
+        <TextBlock Text="Alarm" FontWeight="SemiBold" FontSize="12" Opacity="0.9" Margin="0,0,0,6"/>
+        <CheckBox Content="Enabled" IsChecked="{Binding AlarmEnabled}" Margin="0,0,0,4"/>
+        <TextBlock Text="Consecutive NG Threshold" FontSize="10" Opacity="0.35" Margin="0,0,0,2"/>
+        <TextBox Text="{Binding ConsecutiveNgThreshold, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,4"/>
+
+        <Separator Margin="0,10,0,10"/>
+
+        <!-- Log -->
+        <TextBlock Text="Log" FontWeight="SemiBold" FontSize="12" Opacity="0.9" Margin="0,0,0,6"/>
+        <Grid Margin="0,0,0,4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <CheckBox Grid.Column="0" Content="File Log" IsChecked="{Binding EnableFileLog}"/>
+            <StackPanel Grid.Column="1">
+                <TextBlock Text="Max Lines" FontSize="10" Opacity="0.35"/>
+                <TextBox Text="{Binding MaxLogLines, UpdateSourceTrigger=PropertyChanged}"/>
+            </StackPanel>
+        </Grid>
+
+        <Separator Margin="0,10,0,10"/>
+
+        <!-- CSV Log -->
+        <TextBlock Text="CSV Log" FontWeight="SemiBold" FontSize="12" Opacity="0.9" Margin="0,0,0,6"/>
+        <CheckBox Content="Enabled" IsChecked="{Binding CsvLogEnabled}" Margin="0,0,0,4"/>
+        <TextBlock Text="Path" FontSize="10" Opacity="0.35" Margin="0,0,0,2"/>
+        <TextBox Text="{Binding CsvLogPath, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,6"/>
+
+        <!-- Save Button -->
+        <Button Content="{DynamicResource S.Save}" Command="{Binding SaveSettingsCommand}"
+                Padding="8,6" HorizontalContentAlignment="Center" Margin="0,6,0,0"/>
+        <TextBlock Text="* Restart required" FontSize="9" Opacity="0.3" Margin="0,4,0,0"
+                   HorizontalAlignment="Center"/>
+    </StackPanel>
+</UserControl>

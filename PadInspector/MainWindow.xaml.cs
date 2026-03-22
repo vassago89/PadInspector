@@ -21,4 +21,11 @@ public partial class MainWindow : Window
 
     private void OnKoreanClick(object sender, RoutedEventArgs e) => App.SetLanguage("ko");
     private void OnEnglishClick(object sender, RoutedEventArgs e) => App.SetLanguage("en");
+
+    private void OnToggleThemeClick(object sender, RoutedEventArgs e)
+    {
+#pragma warning disable WPF0001
+        ThemeMode = ThemeMode == ThemeMode.Dark ? ThemeMode.Light : ThemeMode.Dark;
+#pragma warning restore WPF0001
+    }
 }

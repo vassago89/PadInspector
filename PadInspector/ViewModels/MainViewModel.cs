@@ -27,6 +27,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public CameraViewModel Camera2 { get; }
     public RecipeViewModel Recipe { get; }
     public StatisticsViewModel Statistics { get; }
+    public SettingsViewModel Settings { get; }
     public ILogService LogService => _logService;
 
     [ObservableProperty] private bool _isRunning;
@@ -49,7 +50,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IOptions<CamerasSettings> camerasOptions,
         ICameraServiceFactory cameraFactory,
         RecipeViewModel recipeViewModel,
-        StatisticsViewModel statisticsViewModel)
+        StatisticsViewModel statisticsViewModel,
+        SettingsViewModel settingsViewModel)
     {
         _ioService = ioService;
         _inspectionService = inspectionService;
@@ -67,6 +69,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         Camera2 = new CameraViewModel(camSettings.Camera2, cameraFactory);
         Recipe = recipeViewModel;
         Statistics = statisticsViewModel;
+        Settings = settingsViewModel;
 
         // Event wiring
         Camera1.ImageAcquired += OnImageAcquired;
@@ -138,16 +141,25 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task ConnectCamerasAsync()
     {
-        _logService.Log("INFO", "카메라 연결 시도...");
-        StatusMessage = "카메라 연결 중...";
+        try
+        {
+            _logService.Log("INFO", "카메라 연결 시도...");
+            StatusMessage = "카메라 연결 중...";
 
-        var results = await Task.WhenAll(Camera1.ConnectAsync(), Camera2.ConnectAsync());
+            var results = await Task.WhenAll(Camera1.ConnectAsync(), Camera2.ConnectAsync());
 
-        _logService.Log("INFO", $"{Camera1.Name} {(results[0] ? "연결 성공" : "연결 실패 - 더미 모드")}");
-        _logService.Log("INFO", $"{Camera2.Name} {(results[1] ? "연결 성공" : "연결 실패 - 더미 모드")}");
-        StatusMessage = $"CAM1={CamStatus(results[0])} CAM2={CamStatus(results[1])}";
+            _logService.Log("INFO", $"{Camera1.Name} {(results[0] ? "연결 성공" : "연결 실패 - 더미 모드")}");
+            _logService.Log("INFO", $"{Camera2.Name} {(results[1] ? "연결 성공" : "연결 실패 - 더미 모드")}");
+            StatusMessage = $"CAM1={CamStatus(results[0])} CAM2={CamStatus(results[1])}";
 
-        ApplyCameraParameters();
+            ApplyCameraParameters();
+        }
+        catch (Exception ex)
+        {
+            _logService.Log("ERR", $"카메라 연결 실패: {ex.Message}");
+            StatusMessage = "카메라 연결 오류";
+            ShowError($"카메라 연결 중 오류가 발생했습니다.\n{ex.Message}");
+        }
     }
 
     [RelayCommand]
@@ -168,27 +180,36 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task StartAsync()
     {
-        _ioService.Start();
-
-        if (Camera1.IsConnected)
+        try
         {
-            await Camera1.StartGrabAsync();
-            _logService.Log("INFO", $"{Camera1.Name} 그랩 시작 (IO 트리거 대기)");
+            _ioService.Start();
+
+            if (Camera1.IsConnected)
+            {
+                await Camera1.StartGrabAsync();
+                _logService.Log("INFO", $"{Camera1.Name} 그랩 시작 (IO 트리거 대기)");
+            }
+            if (Camera2.IsConnected)
+            {
+                await Camera2.StartGrabAsync();
+                _logService.Log("INFO", $"{Camera2.Name} 그랩 시작 (IO 트리거 대기)");
+            }
+
+            IsRunning = true;
+            StatusMessage = "검사 실행 중 - IO 트리거 대기";
+            _logService.Log("INFO", "검사 시작");
+
+            if (AutoTrigger)
+            {
+                _ioService.StartAutoTrigger(Recipe.TriggerInterval);
+                _logService.Log("INFO", $"자동 트리거 시작 (주기: {Recipe.TriggerInterval}ms)");
+            }
         }
-        if (Camera2.IsConnected)
+        catch (Exception ex)
         {
-            await Camera2.StartGrabAsync();
-            _logService.Log("INFO", $"{Camera2.Name} 그랩 시작 (IO 트리거 대기)");
-        }
-
-        IsRunning = true;
-        StatusMessage = "검사 실행 중 - IO 트리거 대기";
-        _logService.Log("INFO", "검사 시작");
-
-        if (AutoTrigger)
-        {
-            _ioService.StartAutoTrigger(Recipe.TriggerInterval);
-            _logService.Log("INFO", $"자동 트리거 시작 (주기: {Recipe.TriggerInterval}ms)");
+            _logService.Log("ERR", $"검사 시작 실패: {ex.Message}");
+            StatusMessage = "시작 오류";
+            ShowError($"검사 시작 중 오류가 발생했습니다.\n{ex.Message}");
         }
     }
 
@@ -324,6 +345,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         _logService.Clear();
         _logService.Log("INFO", "로그 초기화");
+    }
+
+    #endregion
+
+    #region 유틸
+
+    private void ShowError(string message)
+    {
+        PostToUiThread(() =>
+            System.Windows.MessageBox.Show(message, "Error",
+                System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error));
     }
 
     #endregion

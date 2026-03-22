@@ -85,6 +85,7 @@ public partial class App : Application
         // ViewModels
         services.AddSingleton<RecipeViewModel>();
         services.AddSingleton<StatisticsViewModel>();
+        services.AddSingleton<SettingsViewModel>();
         services.AddSingleton<MainViewModel>();
 
         // Views

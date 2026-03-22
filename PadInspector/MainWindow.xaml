@@ -177,6 +177,13 @@
                                 <TextBox Text="{Binding Recipe.TriggerInterval, UpdateSourceTrigger=PropertyChanged}"/>
                             </StackPanel>
                         </Expander>
+
+                        <Separator Margin="0,14,0,14"/>
+
+                        <!-- Settings -->
+                        <Expander Header="Settings">
+                            <ContentControl Content="{Binding Settings}" Margin="0,8,0,0"/>
+                        </Expander>
                     </StackPanel>
                 </ScrollViewer>
             </Border>
@@ -258,6 +265,8 @@
                         <Run Text="  Fail:"/><Run Text="{Binding Statistics.FailCount, Mode=OneWay}"/>
                         <Run Text="  Yield:"/><Run Text="{Binding Statistics.PassRate, Mode=OneWay}"/><Run Text="%"/>
                     </TextBlock>
+                    <Button Content="Theme" Padding="6,2" FontSize="10" Margin="0,0,8,0"
+                            Click="OnToggleThemeClick"/>
                     <Button Content="KO" Padding="6,2" FontSize="10" Margin="0,0,2,0"
                             Click="OnKoreanClick"/>
                     <Button Content="EN" Padding="6,2" FontSize="10"
