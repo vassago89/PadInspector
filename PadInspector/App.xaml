@@ -16,6 +16,7 @@
             <conv:BoolToColorConverter x:Key="BoolToColor"/>
             <conv:BoolToPassFailConverter x:Key="BoolToPassFail"/>
             <conv:InverseBoolConverter x:Key="InverseBool"/>
+            <conv:NullToVisibilityConverter x:Key="NullToVisibility"/>
 
             <!-- ViewModel -> View mapping -->
             <DataTemplate DataType="{x:Type vm:CameraViewModel}">

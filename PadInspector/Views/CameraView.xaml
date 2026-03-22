@@ -83,7 +83,7 @@
             <Border Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Bottom"
                     Margin="0,0,0,20" Padding="32,10" CornerRadius="12"
                     IsHitTestVisible="False"
-                    Visibility="{Binding LastResult, TargetNullValue=Collapsed, FallbackValue=Collapsed}">
+                    Visibility="{Binding LastResult, Converter={StaticResource NullToVisibility}}">
                 <Border.Background>
                     <SolidColorBrush Color="Black" Opacity="0.8"/>
                 </Border.Background>
@@ -97,6 +97,10 @@
                     <TextBlock FontSize="18" Foreground="{StaticResource SubtextBrush}"
                                VerticalAlignment="Bottom" Margin="14,0,0,3">
                         <Run Text="{Binding LastResult.Score, Mode=OneWay}"/><Run Text="%"/>
+                    </TextBlock>
+                    <TextBlock FontSize="13" Foreground="{StaticResource MutedBrush}"
+                               VerticalAlignment="Bottom" Margin="10,0,0,4">
+                        <Run Text="{Binding LastResult.PadCount, Mode=OneWay}"/><Run Text=" pads"/>
                     </TextBlock>
                 </StackPanel>
             </Border>

@@ -62,6 +62,7 @@
     <sys:String x:Key="S.ConsecutiveNgThreshold">Consecutive NG Threshold</sys:String>
     <sys:String x:Key="S.FileLog">File Log</sys:String>
     <sys:String x:Key="S.MaxLines">Max Lines</sys:String>
+    <sys:String x:Key="S.LogSettings">Log</sys:String>
     <sys:String x:Key="S.CsvLog">CSV Log</sys:String>
     <sys:String x:Key="S.SaveSettings">Save Settings</sys:String>
     <sys:String x:Key="S.RestartRequired">* Restart required to apply changes</sys:String>
@@ -81,6 +82,7 @@
     <sys:String x:Key="S.Fail">FAIL</sys:String>
     <sys:String x:Key="S.Yield">Yield</sys:String>
     <sys:String x:Key="S.AppTitle">PAD INSPECTOR</sys:String>
+    <sys:String x:Key="S.Theme">Theme</sys:String>
     <sys:String x:Key="S.DiskSpace">Disk Space</sys:String>
     <sys:String x:Key="S.AlarmHistory">Alarm History</sys:String>
     <sys:String x:Key="S.CameraFilter">Camera Filter</sys:String>

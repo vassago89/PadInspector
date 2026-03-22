@@ -10,4 +10,7 @@ public class InspectionResult
     public double Score { get; set; }
     public int PadCount { get; set; }
     public string ImagePath { get; set; } = string.Empty;
+
+    public override string ToString() =>
+        $"[{Id}] {CameraName} {(IsPass ? "PASS" : "FAIL")} Score={Score}% Pads={PadCount}";
 }

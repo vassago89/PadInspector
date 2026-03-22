@@ -76,20 +76,20 @@
                     <RowDefinition Height="3"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Threshold" Style="{StaticResource FieldLabel}"/>
-                <TextBlock Grid.Row="0" Grid.Column="2" Text="Pass Score (%)" Style="{StaticResource FieldLabel}"/>
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="{DynamicResource S.Threshold}" Style="{StaticResource FieldLabel}"/>
+                <TextBlock Grid.Row="0" Grid.Column="2" Text="{DynamicResource S.PassScore}" Style="{StaticResource FieldLabel}"/>
                 <TextBox Grid.Row="2" Grid.Column="0"
                          Text="{Binding Threshold, UpdateSourceTrigger=PropertyChanged}"/>
                 <TextBox Grid.Row="2" Grid.Column="2"
                          Text="{Binding PassScore, UpdateSourceTrigger=PropertyChanged}"/>
-                <TextBlock Grid.Row="4" Grid.Column="0" Text="Min Area" Style="{StaticResource FieldLabel}"/>
-                <TextBlock Grid.Row="4" Grid.Column="2" Text="Max Area" Style="{StaticResource FieldLabel}"/>
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="{DynamicResource S.MinArea}" Style="{StaticResource FieldLabel}"/>
+                <TextBlock Grid.Row="4" Grid.Column="2" Text="{DynamicResource S.MaxArea}" Style="{StaticResource FieldLabel}"/>
                 <TextBox Grid.Row="6" Grid.Column="0"
                          Text="{Binding MinArea, UpdateSourceTrigger=PropertyChanged}"/>
                 <TextBox Grid.Row="6" Grid.Column="2"
                          Text="{Binding MaxArea, UpdateSourceTrigger=PropertyChanged}"/>
-                <TextBlock Grid.Row="8" Grid.Column="0" Text="Exposure (us)" Style="{StaticResource FieldLabel}"/>
-                <TextBlock Grid.Row="8" Grid.Column="2" Text="Gain (dB)" Style="{StaticResource FieldLabel}"/>
+                <TextBlock Grid.Row="8" Grid.Column="0" Text="{DynamicResource S.Exposure}" Style="{StaticResource FieldLabel}"/>
+                <TextBlock Grid.Row="8" Grid.Column="2" Text="{DynamicResource S.Gain}" Style="{StaticResource FieldLabel}"/>
                 <TextBox Grid.Row="10" Grid.Column="0"
                          Text="{Binding Exposure, UpdateSourceTrigger=PropertyChanged}"/>
                 <TextBox Grid.Row="10" Grid.Column="2"
@@ -98,7 +98,7 @@
         </Expander>
 
         <!-- ROI -->
-        <Expander Header="ROI (0~1)" Margin="0,6,0,0">
+        <Expander Header="{DynamicResource S.ROI}" Margin="0,6,0,0">
             <StackPanel Margin="0,10,0,0">
                 <TextBlock Text="CAM1" FontSize="11" FontWeight="SemiBold"
                            Foreground="{StaticResource SubtextBrush}" Margin="0,0,0,4"/>
