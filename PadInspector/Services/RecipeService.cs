@@ -106,9 +106,11 @@ public class RecipeService : IRecipeService
 
     public void SaveAs(string name, Recipe recipe)
     {
-        recipe.Name = name;
-        recipe.CreatedAt = DateTime.Now;
-        Save(recipe);
+        var json = JsonSerializer.Serialize(recipe, JsonOptions);
+        var copy = JsonSerializer.Deserialize<Recipe>(json, JsonOptions)!;
+        copy.Name = name;
+        copy.CreatedAt = DateTime.Now;
+        Save(copy);
     }
 
     public void Delete(string name)

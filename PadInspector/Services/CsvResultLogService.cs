@@ -40,8 +40,8 @@ public class CsvResultLogService : IResultLogService, IDisposable
                     result.CameraName,
                     result.IsPass ? "PASS" : "FAIL",
                     result.Score,
-                    $"\"{result.Description}\"",
-                    $"\"{result.ImagePath}\""));
+                    EscapeCsv(result.Description),
+                    EscapeCsv(result.ImagePath)));
                 _writer?.Flush();
                 _consecutiveFailures = 0;
             }
@@ -70,6 +70,13 @@ public class CsvResultLogService : IResultLogService, IDisposable
             _writer.WriteLine("DateTime,Id,Camera,Result,Score,Description,ImagePath");
             _writer.Flush();
         }
+    }
+
+    private static string EscapeCsv(string value)
+    {
+        if (value.Contains('"') || value.Contains(',') || value.Contains('\n'))
+            return $"\"{value.Replace("\"", "\"\"")}\"";
+        return $"\"{value}\"";
     }
 
     public void Dispose()

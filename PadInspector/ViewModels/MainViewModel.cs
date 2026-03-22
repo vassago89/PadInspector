@@ -312,7 +312,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         if (!_processLock.Wait(0))
         {
             _logService.Log("WARN", $"[{camera.Name}] 프레임 드롭 (처리 중)");
-            if (!camera.IsConnected) image.Dispose();
+            image.Dispose();
             return;
         }
 
