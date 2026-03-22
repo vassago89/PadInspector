@@ -1,0 +1,16 @@
+<UserControl x:Class="PadInspector.Views.YieldChart"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Border BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+            BorderThickness="1" CornerRadius="8" Padding="6" Background="#08FFFFFF">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Row="0" Text="수율 트렌드" FontSize="11" FontWeight="SemiBold"
+                       Margin="6,0,0,2" Opacity="0.6"/>
+            <Canvas x:Name="ChartCanvas" Grid.Row="1" SizeChanged="OnSizeChanged"/>
+        </Grid>
+    </Border>
+</UserControl>

@@ -9,7 +9,7 @@ namespace PadInspector;
 
 public partial class App : Application
 {
-    public static IServiceProvider Services { get; private set; } = null!;
+    private ServiceProvider? _serviceProvider;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -17,10 +17,16 @@ public partial class App : Application
 
         var services = new ServiceCollection();
         ConfigureServices(services);
-        Services = services.BuildServiceProvider();
+        _serviceProvider = services.BuildServiceProvider();
 
-        var mainWindow = Services.GetRequiredService<MainWindow>();
+        var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
         mainWindow.Show();
+    }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        _serviceProvider?.Dispose();
+        base.OnExit(e);
     }
 
     private static void ConfigureServices(IServiceCollection services)
@@ -34,18 +40,37 @@ public partial class App : Application
         services.AddSingleton<IConfiguration>(configuration);
 
         // Options
-        services.Configure<CameraSettings>(configuration.GetSection("Camera"));
+        services.Configure<CamerasSettings>(configuration.GetSection("Cameras"));
         services.Configure<InspectionSettings>(configuration.GetSection("Inspection"));
         services.Configure<IOSettings>(configuration.GetSection("IO"));
         services.Configure<LogSettings>(configuration.GetSection("Log"));
+        services.Configure<ImageSaveSettings>(configuration.GetSection("ImageSave"));
+        services.Configure<CsvLogSettings>(configuration.GetSection("CsvLog"));
+        services.Configure<AlarmSettings>(configuration.GetSection("Alarm"));
+        services.Configure<ModbusSettings>(configuration.GetSection("Modbus"));
+        services.Configure<RecipeSettings>(configuration.GetSection("Recipe"));
 
         // Services
-        services.AddSingleton<IIOService, VirtualIOService>();
-        services.AddSingleton<ICameraService, HikCameraService>();
+        var modbusEnabled = configuration.GetValue<bool>("Modbus:Enabled");
+        if (modbusEnabled)
+            services.AddSingleton<IIOService, ModbusTcpIOService>();
+        else
+            services.AddSingleton<IIOService, VirtualIOService>();
+
+        services.AddSingleton<ICameraServiceFactory, HikCameraServiceFactory>();
         services.AddSingleton<IInspectionService, InspectionService>();
         services.AddSingleton<IRecipeService, RecipeService>();
+        services.AddSingleton<IImageSaveService, ImageSaveService>();
+        services.AddSingleton<IResultLogService, CsvResultLogService>();
+        services.AddSingleton<ILogService, LogService>();
+        services.AddSingleton<IAlarmService, AlarmService>();
+        services.AddSingleton<IIOOutputService, IOOutputService>();
+        services.AddSingleton<IStatisticsService, StatisticsService>();
+        services.AddSingleton<ITestImageService, TestImageService>();
 
         // ViewModels
+        services.AddSingleton<RecipeViewModel>();
+        services.AddSingleton<StatisticsViewModel>();
         services.AddSingleton<MainViewModel>();
 
         // Views

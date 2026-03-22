@@ -1,0 +1,135 @@
+<UserControl x:Class="PadInspector.Views.RecipeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel>
+
+        <!-- Recipe Selector -->
+        <TextBlock Text="레시피" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,8" Opacity="0.9"/>
+        <ComboBox ItemsSource="{Binding Names}"
+                  SelectedItem="{Binding SelectedName}" Margin="0,0,0,8"/>
+
+        <Grid Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="6"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="3"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="이름" FontSize="10" Opacity="0.35"/>
+            <TextBlock Grid.Row="0" Grid.Column="2" Text="설명" FontSize="10" Opacity="0.35"/>
+            <TextBox Grid.Row="2" Grid.Column="0"
+                     Text="{Binding RecipeName, UpdateSourceTrigger=PropertyChanged}"/>
+            <TextBox Grid.Row="2" Grid.Column="2"
+                     Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"/>
+        </Grid>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="4"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="4"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" Content="저장" Command="{Binding SaveCommand}" Padding="4,5" HorizontalContentAlignment="Center"/>
+            <Button Grid.Column="2" Content="다른이름" Command="{Binding SaveAsCommand}" Padding="4,5" HorizontalContentAlignment="Center"/>
+            <Button Grid.Column="4" Content="삭제" Command="{Binding DeleteCommand}" Padding="4,5" HorizontalContentAlignment="Center"/>
+        </Grid>
+
+        <Separator Margin="0,14,0,14"/>
+
+        <!-- Inspection Params -->
+        <Expander Header="검사 파라미터" IsExpanded="True">
+            <Grid Margin="0,10,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="6"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="3"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="10"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="3"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="10"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="3"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Threshold" FontSize="10" Opacity="0.35"/>
+                <TextBlock Grid.Row="0" Grid.Column="2" Text="Pass Score (%)" FontSize="10" Opacity="0.35"/>
+                <TextBox Grid.Row="2" Grid.Column="0"
+                         Text="{Binding Threshold, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBox Grid.Row="2" Grid.Column="2"
+                         Text="{Binding PassScore, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Min Area" FontSize="10" Opacity="0.35"/>
+                <TextBlock Grid.Row="4" Grid.Column="2" Text="Max Area" FontSize="10" Opacity="0.35"/>
+                <TextBox Grid.Row="6" Grid.Column="0"
+                         Text="{Binding MinArea, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBox Grid.Row="6" Grid.Column="2"
+                         Text="{Binding MaxArea, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBlock Grid.Row="8" Grid.Column="0" Text="Exposure (us)" FontSize="10" Opacity="0.35"/>
+                <TextBlock Grid.Row="8" Grid.Column="2" Text="Gain (dB)" FontSize="10" Opacity="0.35"/>
+                <TextBox Grid.Row="10" Grid.Column="0"
+                         Text="{Binding Exposure, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBox Grid.Row="10" Grid.Column="2"
+                         Text="{Binding Gain, UpdateSourceTrigger=PropertyChanged}"/>
+            </Grid>
+        </Expander>
+
+        <!-- ROI -->
+        <Expander Header="ROI (0~1)" Margin="0,6,0,0">
+            <StackPanel Margin="0,10,0,0">
+                <TextBlock Text="CAM1" FontSize="11" FontWeight="SemiBold" Opacity="0.7" Margin="0,0,0,4"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="6"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/><RowDefinition Height="3"/><RowDefinition Height="Auto"/>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="Auto"/><RowDefinition Height="3"/><RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="X" FontSize="10" Opacity="0.35"/>
+                    <TextBlock Grid.Row="0" Grid.Column="2" Text="Y" FontSize="10" Opacity="0.35"/>
+                    <TextBox Grid.Row="2" Grid.Column="0" Text="{Binding Cam1RoiX, UpdateSourceTrigger=PropertyChanged}"/>
+                    <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding Cam1RoiY, UpdateSourceTrigger=PropertyChanged}"/>
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="W" FontSize="10" Opacity="0.35"/>
+                    <TextBlock Grid.Row="4" Grid.Column="2" Text="H" FontSize="10" Opacity="0.35"/>
+                    <TextBox Grid.Row="6" Grid.Column="0" Text="{Binding Cam1RoiW, UpdateSourceTrigger=PropertyChanged}"/>
+                    <TextBox Grid.Row="6" Grid.Column="2" Text="{Binding Cam1RoiH, UpdateSourceTrigger=PropertyChanged}"/>
+                </Grid>
+                <TextBlock Text="CAM2" FontSize="11" FontWeight="SemiBold" Opacity="0.7" Margin="0,12,0,4"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="6"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/><RowDefinition Height="3"/><RowDefinition Height="Auto"/>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="Auto"/><RowDefinition Height="3"/><RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="X" FontSize="10" Opacity="0.35"/>
+                    <TextBlock Grid.Row="0" Grid.Column="2" Text="Y" FontSize="10" Opacity="0.35"/>
+                    <TextBox Grid.Row="2" Grid.Column="0" Text="{Binding Cam2RoiX, UpdateSourceTrigger=PropertyChanged}"/>
+                    <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding Cam2RoiY, UpdateSourceTrigger=PropertyChanged}"/>
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="W" FontSize="10" Opacity="0.35"/>
+                    <TextBlock Grid.Row="4" Grid.Column="2" Text="H" FontSize="10" Opacity="0.35"/>
+                    <TextBox Grid.Row="6" Grid.Column="0" Text="{Binding Cam2RoiW, UpdateSourceTrigger=PropertyChanged}"/>
+                    <TextBox Grid.Row="6" Grid.Column="2" Text="{Binding Cam2RoiH, UpdateSourceTrigger=PropertyChanged}"/>
+                </Grid>
+            </StackPanel>
+        </Expander>
+
+    </StackPanel>
+</UserControl>

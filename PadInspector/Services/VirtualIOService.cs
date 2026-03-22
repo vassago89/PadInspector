@@ -14,21 +14,17 @@ public class VirtualIOService : IIOService
     private readonly IOSettings _settings;
     private readonly bool[] _inputs;
     private readonly bool[] _outputs;
+    private readonly object _lock = new();
     private Timer? _autoTriggerTimer;
     private bool _isRunning;
-    private bool _autoTriggerEnabled;
-    private int _triggerIntervalMs;
 
     public bool IsRunning => _isRunning;
-    public bool AutoTriggerEnabled => _autoTriggerEnabled;
-    public int TriggerIntervalMs => _triggerIntervalMs;
 
     public VirtualIOService(IOptions<IOSettings> options)
     {
         _settings = options.Value;
         _inputs = new bool[_settings.ChannelCount];
         _outputs = new bool[_settings.ChannelCount];
-        _triggerIntervalMs = _settings.DefaultTriggerIntervalMs;
     }
 
     public void Start()
@@ -42,62 +38,86 @@ public class VirtualIOService : IIOService
         StopAutoTrigger();
     }
 
-    /// <summary>
-    /// 수동으로 트리거 신호 발생
-    /// </summary>
     public void FireTrigger(int channel = 0)
     {
         if (!_isRunning) return;
 
-        _inputs[channel] = true;
-        var signal = new IOSignal
+        lock (_lock)
+        {
+            _inputs[channel] = true;
+        }
+
+        TriggerReceived?.Invoke(this, new IOSignal
         {
             Channel = channel,
             IsOn = true,
             Name = $"TRIGGER_IN_{channel}",
             Timestamp = DateTime.Now
-        };
-        TriggerReceived?.Invoke(this, signal);
+        });
 
-        // 설정된 딜레이 후 신호 리셋
-        Task.Delay(_settings.SignalResetDelayMs).ContinueWith(_ => _inputs[channel] = false);
+        _ = ResetInputAfterDelayAsync(channel);
     }
 
-    /// <summary>
-    /// 자동 트리거 시작 (주기적으로 신호 발생)
-    /// </summary>
+    private async Task ResetInputAfterDelayAsync(int channel)
+    {
+        try
+        {
+            await Task.Delay(_settings.SignalResetDelayMs);
+            lock (_lock)
+            {
+                _inputs[channel] = false;
+            }
+        }
+        catch (ObjectDisposedException)
+        {
+            // 종료 중 무시
+        }
+    }
+
     public void StartAutoTrigger(int intervalMs = 0)
     {
         if (intervalMs <= 0) intervalMs = _settings.DefaultTriggerIntervalMs;
-        _triggerIntervalMs = intervalMs;
-        _autoTriggerEnabled = true;
-        _autoTriggerTimer = new Timer(_ => FireTrigger(_settings.DefaultTriggerChannel), null, 0, intervalMs);
+        _autoTriggerTimer?.Dispose();
+        _autoTriggerTimer = new Timer(_ =>
+        {
+            foreach (var ch in _settings.AutoTriggerChannels)
+                FireTrigger(ch);
+        }, null, 0, intervalMs);
     }
 
-    /// <summary>
-    /// 자동 트리거 정지
-    /// </summary>
     public void StopAutoTrigger()
     {
-        _autoTriggerEnabled = false;
         _autoTriggerTimer?.Dispose();
         _autoTriggerTimer = null;
     }
 
     public void SetOutput(int channel, bool value)
     {
-        if (channel >= 0 && channel < _outputs.Length)
+        lock (_lock)
         {
-            _outputs[channel] = value;
+            if (channel >= 0 && channel < _outputs.Length)
+                _outputs[channel] = value;
         }
     }
 
-    public bool GetInput(int channel) => channel >= 0 && channel < _inputs.Length && _inputs[channel];
-    public bool GetOutput(int channel) => channel >= 0 && channel < _outputs.Length && _outputs[channel];
+    public bool GetInput(int channel)
+    {
+        lock (_lock)
+        {
+            return channel >= 0 && channel < _inputs.Length && _inputs[channel];
+        }
+    }
+
+    public bool GetOutput(int channel)
+    {
+        lock (_lock)
+        {
+            return channel >= 0 && channel < _outputs.Length && _outputs[channel];
+        }
+    }
 
     public void Dispose()
     {
         Stop();
-        _autoTriggerTimer?.Dispose();
     }
 }

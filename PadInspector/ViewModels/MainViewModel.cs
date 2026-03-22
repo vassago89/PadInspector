@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -13,226 +12,166 @@ namespace PadInspector.ViewModels;
 
 public partial class MainViewModel : ObservableObject, IDisposable
 {
-    private readonly ICameraService _cameraService;
     private readonly IIOService _ioService;
     private readonly IInspectionService _inspectionService;
-    private readonly IRecipeService _recipeService;
-    private readonly LogSettings _logSettings;
-    private readonly InspectionSettings _inspectionSettings;
+    private readonly IImageSaveService _imageSaveService;
+    private readonly IResultLogService _resultLogService;
+    private readonly ILogService _logService;
+    private readonly IAlarmService _alarmService;
+    private readonly IIOOutputService _ioOutputService;
+    private readonly ITestImageService _testImageService;
+    private readonly SynchronizationContext? _syncContext;
+    private bool _disposed;
 
-    [ObservableProperty] private BitmapSource? _currentImage;
-    [ObservableProperty] private bool _isCameraConnected;
+    public CameraViewModel Camera1 { get; }
+    public CameraViewModel Camera2 { get; }
+    public RecipeViewModel Recipe { get; }
+    public StatisticsViewModel Statistics { get; }
+    public ILogService LogService => _logService;
+
     [ObservableProperty] private bool _isRunning;
     [ObservableProperty] private string _statusMessage = "대기 중";
-    [ObservableProperty] private int _totalCount;
-    [ObservableProperty] private int _passCount;
-    [ObservableProperty] private int _failCount;
-    [ObservableProperty] private double _passRate;
     [ObservableProperty] private bool _autoTrigger;
-    [ObservableProperty] private int _triggerInterval = 2000;
-    [ObservableProperty] private InspectionResult? _lastResult;
 
-    // 레시피
-    [ObservableProperty] private string? _selectedRecipeName;
-    [ObservableProperty] private string _recipeName = "";
-    [ObservableProperty] private string _recipeDescription = "";
-    [ObservableProperty] private double _recipeThreshold = 128;
-    [ObservableProperty] private double _recipeMinArea = 0.01;
-    [ObservableProperty] private double _recipeMaxArea = 0.5;
-    [ObservableProperty] private double _recipePassScore = 5.0;
-    [ObservableProperty] private int _recipeExposure = 500;
-    [ObservableProperty] private int _recipeGain = 0;
-
-    public ObservableCollection<InspectionResult> Results { get; } = new();
-    public ObservableCollection<string> LogMessages { get; } = new();
-    public ObservableCollection<string> RecipeNames { get; } = new();
+    // 알람
+    [ObservableProperty] private bool _isAlarm;
+    [ObservableProperty] private string _alarmMessage = "";
 
     public MainViewModel(
-        ICameraService cameraService,
         IIOService ioService,
         IInspectionService inspectionService,
-        IRecipeService recipeService,
-        IOptions<LogSettings> logOptions,
-        IOptions<InspectionSettings> inspectionOptions)
+        IImageSaveService imageSaveService,
+        IResultLogService resultLogService,
+        ILogService logService,
+        IAlarmService alarmService,
+        IIOOutputService ioOutputService,
+        ITestImageService testImageService,
+        IOptions<CamerasSettings> camerasOptions,
+        ICameraServiceFactory cameraFactory,
+        RecipeViewModel recipeViewModel,
+        StatisticsViewModel statisticsViewModel)
     {
-        _cameraService = cameraService;
         _ioService = ioService;
         _inspectionService = inspectionService;
-        _recipeService = recipeService;
-        _logSettings = logOptions.Value;
-        _inspectionSettings = inspectionOptions.Value;
+        _imageSaveService = imageSaveService;
+        _resultLogService = resultLogService;
+        _logService = logService;
+        _alarmService = alarmService;
+        _ioOutputService = ioOutputService;
+        _testImageService = testImageService;
+        _syncContext = SynchronizationContext.Current;
 
+        // Sub ViewModels (DI resolved)
+        var camSettings = camerasOptions.Value;
+        Camera1 = new CameraViewModel(camSettings.Camera1, cameraFactory);
+        Camera2 = new CameraViewModel(camSettings.Camera2, cameraFactory);
+        Recipe = recipeViewModel;
+        Statistics = statisticsViewModel;
+
+        // Event wiring
+        Camera1.ImageAcquired += OnImageAcquired;
+        Camera2.ImageAcquired += OnImageAcquired;
+        Recipe.RecipeChanged += OnRecipeChanged;
         _ioService.TriggerReceived += OnTriggerReceived;
-        _cameraService.ImageGrabbed += OnImageGrabbed;
+        _alarmService.AlarmStateChanged += OnAlarmStateChanged;
 
-        // 레시피 목록 로드
-        RefreshRecipeList();
-        ApplyRecipeToUI(_recipeService.CurrentRecipe);
-        SelectedRecipeName = _recipeService.CurrentRecipe.Name;
+        // 초기 레시피 적용
+        _currentRecipe = GetCurrentRecipeFromVM();
+        _inspectionService.ApplyRecipe(_currentRecipe);
 
-        Log("INFO", $"시스템 초기화 완료 | 레시피: {_recipeService.CurrentRecipe.Name}");
+        _logService.Log("INFO", $"시스템 초기화 완료 (듀얼 카메라) | 레시피: {Recipe.RecipeName}");
     }
 
-    private void RefreshRecipeList()
-    {
-        RecipeNames.Clear();
-        foreach (var name in _recipeService.RecipeNames)
-            RecipeNames.Add(name);
-    }
+    private Recipe _currentRecipe = new();
 
-    private void ApplyRecipeToUI(Recipe recipe)
+    private Recipe GetCurrentRecipeFromVM() => new()
     {
-        RecipeName = recipe.Name;
-        RecipeDescription = recipe.Description;
-        RecipeThreshold = recipe.ThresholdValue;
-        RecipeMinArea = recipe.MinAreaRatio;
-        RecipeMaxArea = recipe.MaxAreaRatio;
-        RecipePassScore = recipe.PassScoreThreshold;
-        RecipeExposure = recipe.ExposureTimeUs;
-        RecipeGain = recipe.GainDb;
-        TriggerInterval = recipe.TriggerIntervalMs;
-    }
+        Name = Recipe.RecipeName,
+        ThresholdValue = Recipe.Threshold,
+        MinAreaRatio = Recipe.MinArea,
+        MaxAreaRatio = Recipe.MaxArea,
+        PassScoreThreshold = Recipe.PassScore,
+        ExposureTimeUs = Recipe.Exposure,
+        GainDb = Recipe.Gain,
+        TriggerIntervalMs = Recipe.TriggerInterval,
+        Camera1Roi = new RoiRect { X = Recipe.Cam1RoiX, Y = Recipe.Cam1RoiY, Width = Recipe.Cam1RoiW, Height = Recipe.Cam1RoiH },
+        Camera2Roi = new RoiRect { X = Recipe.Cam2RoiX, Y = Recipe.Cam2RoiY, Width = Recipe.Cam2RoiW, Height = Recipe.Cam2RoiH }
+    };
 
-    private Recipe BuildRecipeFromUI()
+    private void OnRecipeChanged(Recipe recipe)
     {
-        return new Recipe
-        {
-            Name = RecipeName,
-            Description = RecipeDescription,
-            ThresholdValue = RecipeThreshold,
-            MinAreaRatio = RecipeMinArea,
-            MaxAreaRatio = RecipeMaxArea,
-            PassScoreThreshold = RecipePassScore,
-            ExposureTimeUs = RecipeExposure,
-            GainDb = RecipeGain,
-            TriggerChannel = 0,
-            TriggerIntervalMs = TriggerInterval,
-            CreatedAt = _recipeService.CurrentRecipe.CreatedAt
-        };
-    }
-
-    partial void OnSelectedRecipeNameChanged(string? value)
-    {
-        if (string.IsNullOrEmpty(value)) return;
-
-        _recipeService.Load(value);
-        var recipe = _recipeService.CurrentRecipe;
-        ApplyRecipeToUI(recipe);
+        _currentRecipe = recipe;
         _inspectionService.ApplyRecipe(recipe);
-        Log("RECIPE", $"레시피 변경: {recipe.Name} (Threshold={recipe.ThresholdValue}, PassScore={recipe.PassScoreThreshold})");
     }
 
-    [RelayCommand]
-    private void SaveRecipe()
+    private void OnAlarmStateChanged(bool isAlarm, string message)
     {
-        var recipe = BuildRecipeFromUI();
-        _recipeService.Save(recipe);
-        _inspectionService.ApplyRecipe(recipe);
-        RefreshRecipeList();
-        SelectedRecipeName = recipe.Name;
-        Log("RECIPE", $"레시피 저장: {recipe.Name}");
+        IsAlarm = isAlarm;
+        AlarmMessage = message;
     }
 
-    [RelayCommand]
-    private void SaveRecipeAs()
+    private void RunOnUiThread(Action action)
     {
-        var newName = RecipeName.Trim();
-        if (string.IsNullOrEmpty(newName)) return;
-
-        var recipe = BuildRecipeFromUI();
-        _recipeService.SaveAs(newName, recipe);
-        _inspectionService.ApplyRecipe(recipe);
-        RefreshRecipeList();
-        SelectedRecipeName = newName;
-        Log("RECIPE", $"레시피 다른이름 저장: {newName}");
-    }
-
-    [RelayCommand]
-    private void DeleteRecipe()
-    {
-        if (SelectedRecipeName == null || RecipeNames.Count <= 1) return;
-
-        var name = SelectedRecipeName;
-        _recipeService.Delete(name);
-        RefreshRecipeList();
-        SelectedRecipeName = RecipeNames.FirstOrDefault();
-        Log("RECIPE", $"레시피 삭제: {name}");
-    }
-
-    private void Log(string level, string message)
-    {
-        var line = $"[{DateTime.Now:HH:mm:ss.fff}] [{level}] {message}";
-        if (System.Windows.Application.Current?.Dispatcher.CheckAccess() == true)
-        {
-            LogMessages.Add(line);
-            if (LogMessages.Count > _logSettings.MaxLogLines)
-                LogMessages.RemoveAt(0);
-        }
+        if (_syncContext == null || SynchronizationContext.Current == _syncContext)
+            action();
         else
-        {
-            System.Windows.Application.Current?.Dispatcher.Invoke(() =>
-            {
-                LogMessages.Add(line);
-                if (LogMessages.Count > _logSettings.MaxLogLines)
-                    LogMessages.RemoveAt(0);
-            });
-        }
+            _syncContext.Send(_ => action(), null);
     }
 
-    [RelayCommand]
-    private void ClearLog()
-    {
-        LogMessages.Clear();
-        Log("INFO", "로그 초기화");
-    }
+    #region 카메라 제어
 
     [RelayCommand]
-    private async Task ConnectCameraAsync()
+    private async Task ConnectCamerasAsync()
     {
-        Log("INFO", "카메라 연결 시도...");
+        _logService.Log("INFO", "카메라 연결 시도...");
         StatusMessage = "카메라 연결 중...";
-        IsCameraConnected = await _cameraService.ConnectAsync();
-        if (IsCameraConnected)
-        {
-            StatusMessage = "카메라 연결됨";
-            Log("INFO", "카메라 연결 성공");
-        }
-        else
-        {
-            StatusMessage = "카메라 연결 실패";
-            Log("WARN", "카메라 연결 실패 - 더미 이미지 모드로 동작합니다");
-        }
+
+        var results = await Task.WhenAll(Camera1.ConnectAsync(), Camera2.ConnectAsync());
+
+        _logService.Log("INFO", $"{Camera1.Name} {(results[0] ? "연결 성공" : "연결 실패 - 더미 모드")}");
+        _logService.Log("INFO", $"{Camera2.Name} {(results[1] ? "연결 성공" : "연결 실패 - 더미 모드")}");
+        StatusMessage = $"CAM1={CamStatus(results[0])} CAM2={CamStatus(results[1])}";
     }
 
     [RelayCommand]
-    private void DisconnectCamera()
+    private void DisconnectCameras()
     {
-        _cameraService.Disconnect();
-        IsCameraConnected = false;
+        Camera1.Disconnect();
+        Camera2.Disconnect();
         StatusMessage = "카메라 연결 해제됨";
-        Log("INFO", "카메라 연결 해제");
+        _logService.Log("INFO", "모든 카메라 연결 해제");
     }
+
+    private static string CamStatus(bool connected) => connected ? "연결" : "미연결";
+
+    #endregion
+
+    #region 실행 제어
 
     [RelayCommand]
     private async Task StartAsync()
     {
         _ioService.Start();
-        Log("INFO", "IO 서비스 시작 (Virtual)");
 
-        if (IsCameraConnected)
+        if (Camera1.IsConnected)
         {
-            await _cameraService.StartGrabAsync();
-            Log("INFO", "카메라 그랩 시작");
+            await Camera1.StartGrabAsync();
+            _logService.Log("INFO", $"{Camera1.Name} 그랩 시작 (IO 트리거 대기)");
+        }
+        if (Camera2.IsConnected)
+        {
+            await Camera2.StartGrabAsync();
+            _logService.Log("INFO", $"{Camera2.Name} 그랩 시작 (IO 트리거 대기)");
         }
 
         IsRunning = true;
-        StatusMessage = "검사 실행 중";
-        Log("INFO", "검사 시작");
+        StatusMessage = "검사 실행 중 - IO 트리거 대기";
+        _logService.Log("INFO", "검사 시작");
 
         if (AutoTrigger)
         {
-            _ioService.StartAutoTrigger(TriggerInterval);
-            Log("INFO", $"자동 트리거 시작 (주기: {TriggerInterval}ms)");
+            _ioService.StartAutoTrigger(Recipe.TriggerInterval);
+            _logService.Log("INFO", $"자동 트리거 시작 (주기: {Recipe.TriggerInterval}ms)");
         }
     }
 
@@ -241,9 +180,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         IsRunning = false;
         _ioService.Stop();
-        _cameraService.StopGrab();
+        Camera1.StopGrab();
+        Camera2.StopGrab();
         StatusMessage = "정지됨";
-        Log("INFO", "검사 정지");
+        _logService.Log("INFO", "검사 정지");
     }
 
     [RelayCommand]
@@ -251,128 +191,139 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         if (!IsRunning) return;
         _ioService.FireTrigger(0);
-        Log("TRIG", "수동 트리거 발생 (CH0)");
+        _ioService.FireTrigger(1);
+        _logService.Log("TRIG", "수동 트리거 (CH0, CH1)");
     }
 
     [RelayCommand]
     private void ResetCount()
     {
-        TotalCount = 0;
-        PassCount = 0;
-        FailCount = 0;
-        PassRate = 0;
-        Results.Clear();
-        LastResult = null;
-        Log("INFO", "카운트 초기화");
+        Statistics.Reset();
+        Camera1.LastResult = null;
+        Camera2.LastResult = null;
+        _alarmService.Reset();
+        _logService.Log("INFO", "카운트 초기화");
     }
 
     partial void OnAutoTriggerChanged(bool value)
     {
-        if (IsRunning)
+        if (!IsRunning) return;
+
+        if (value)
         {
-            if (value)
-            {
-                _ioService.StartAutoTrigger(TriggerInterval);
-                Log("INFO", $"자동 트리거 ON (주기: {TriggerInterval}ms)");
-            }
-            else
-            {
-                _ioService.StopAutoTrigger();
-                Log("INFO", "자동 트리거 OFF");
-            }
+            _ioService.StartAutoTrigger(Recipe.TriggerInterval);
+            _logService.Log("INFO", $"자동 트리거 ON (주기: {Recipe.TriggerInterval}ms)");
+        }
+        else
+        {
+            _ioService.StopAutoTrigger();
+            _logService.Log("INFO", "자동 트리거 OFF");
         }
     }
+
+    #endregion
+
+    #region 이미지 처리
 
     private void OnTriggerReceived(object? sender, IOSignal signal)
     {
         if (!IsRunning) return;
 
-        if (!IsCameraConnected)
-        {
-            var dummyImage = GenerateTestImage();
-            ProcessImage(dummyImage);
-        }
+        if (signal.Channel == 0 && !Camera1.IsConnected)
+            ProcessImage(_testImageService.Generate(), Camera1);
+        else if (signal.Channel == 1 && !Camera2.IsConnected)
+            ProcessImage(_testImageService.Generate(), Camera2);
     }
 
-    private void OnImageGrabbed(object? sender, Mat image)
+    private void OnImageAcquired(object? sender, Mat image)
     {
-        ProcessImage(image);
+        if (sender is CameraViewModel camera)
+            ProcessImage(image, camera);
     }
 
-    private void ProcessImage(Mat image)
+    private void ProcessImage(Mat image, CameraViewModel camera)
     {
         try
         {
             var bitmapSource = image.ToBitmapSource();
             bitmapSource.Freeze();
 
-            System.Windows.Application.Current?.Dispatcher.Invoke(() =>
-            {
-                CurrentImage = bitmapSource;
-
-                var result = _inspectionService.Inspect(image);
-                LastResult = result;
-
-                TotalCount++;
-                if (result.IsPass)
-                    PassCount++;
-                else
-                    FailCount++;
-
-                PassRate = TotalCount > 0 ? Math.Round((double)PassCount / TotalCount * 100, 1) : 0;
-
-                Results.Insert(0, result);
-                if (Results.Count > _inspectionSettings.MaxResultHistory)
-                    Results.RemoveAt(Results.Count - 1);
-
-                StatusMessage = $"#{result.Id} {(result.IsPass ? "PASS" : "FAIL")} - {result.Description}";
-
-                Log(result.IsPass ? "PASS" : "FAIL",
-                    $"#{result.Id} Score={result.Score}% | {result.Description} | Total={TotalCount} Pass={PassCount} Fail={FailCount} Rate={PassRate}%");
-            });
+            RunOnUiThread(() => ProcessImageOnUiThread(image, bitmapSource, camera));
         }
         catch (Exception ex)
         {
-            System.Windows.Application.Current?.Dispatcher.Invoke(() =>
+            RunOnUiThread(() =>
             {
-                StatusMessage = $"처리 오류: {ex.Message}";
-                Log("ERR", $"이미지 처리 오류: {ex.Message}");
+                StatusMessage = $"[{camera.Name}] 처리 오류: {ex.Message}";
+                _logService.Log("ERR", $"[{camera.Name}] {ex.Message}");
             });
         }
         finally
         {
-            if (!IsCameraConnected)
+            if (!camera.IsConnected)
                 image.Dispose();
         }
     }
 
-    private static Mat GenerateTestImage()
+    private void ProcessImageOnUiThread(Mat image, BitmapSource bitmapSource, CameraViewModel camera)
     {
-        var random = Random.Shared;
-        var mat = new Mat(480, 640, MatType.CV_8UC1, Scalar.All(30));
+        var roi = camera == Camera1 ? _currentRecipe.Camera1Roi : _currentRecipe.Camera2Roi;
+        var result = _inspectionService.Inspect(image, roi);
+        result.CameraName = camera.Name;
 
-        int padCount = random.Next(1, 6);
-        for (int i = 0; i < padCount; i++)
-        {
-            int x = random.Next(50, 550);
-            int y = random.Next(50, 400);
-            int w = random.Next(30, 80);
-            int h = random.Next(30, 80);
-            Cv2.Rectangle(mat, new Rect(x, y, w, h), Scalar.All(200), -1);
-        }
+        var savedPath = _imageSaveService.Save(image, result);
+        if (savedPath != null)
+            result.ImagePath = savedPath;
 
-        var noise = new Mat(mat.Size(), MatType.CV_8UC1);
-        Cv2.Randn(noise, Scalar.All(0), Scalar.All(15));
-        Cv2.Add(mat, noise, mat);
+        _resultLogService.Log(result);
 
-        return mat;
+        var cameraIndex = camera == Camera1 ? 0 : 1;
+        _ioOutputService.OutputResult(cameraIndex, result.IsPass);
+
+        camera.UpdateDisplay(bitmapSource, result);
+        Statistics.AddResult(result);
+        _alarmService.CheckResult(camera.Name, result.IsPass);
+
+        StatusMessage = $"[{camera.Name}] #{result.Id} {(result.IsPass ? "PASS" : "FAIL")} - {result.Description}";
+        _logService.Log(result.IsPass ? "PASS" : "FAIL",
+            $"[{camera.Name}] #{result.Id} Score={result.Score}% | Total={Statistics.TotalCount} P={Statistics.PassCount} F={Statistics.FailCount} Rate={Statistics.PassRate}%");
     }
+
+    #endregion
+
+    #region 알람
+
+    [RelayCommand]
+    private void ClearAlarm()
+    {
+        _alarmService.Clear();
+    }
+
+    #endregion
+
+    #region 로그
+
+    [RelayCommand]
+    private void ClearLog()
+    {
+        _logService.Clear();
+        _logService.Log("INFO", "로그 초기화");
+    }
+
+    #endregion
 
     public void Dispose()
     {
+        if (_disposed) return;
+        _disposed = true;
+
+        Camera1.ImageAcquired -= OnImageAcquired;
+        Camera2.ImageAcquired -= OnImageAcquired;
+        Recipe.RecipeChanged -= OnRecipeChanged;
         _ioService.TriggerReceived -= OnTriggerReceived;
-        _cameraService.ImageGrabbed -= OnImageGrabbed;
+        _alarmService.AlarmStateChanged -= OnAlarmStateChanged;
         _ioService.Dispose();
-        _cameraService.Dispose();
+        Camera1.Dispose();
+        Camera2.Dispose();
     }
 }

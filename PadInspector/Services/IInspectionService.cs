@@ -9,6 +9,6 @@ public interface IInspectionService
     double MinAreaRatio { get; set; }
     double MaxAreaRatio { get; set; }
     double PassScoreThreshold { get; set; }
-    InspectionResult Inspect(Mat image);
+    InspectionResult Inspect(Mat image, RoiRect? roi = null);
     void ApplyRecipe(Recipe recipe);
 }

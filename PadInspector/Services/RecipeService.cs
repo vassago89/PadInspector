@@ -1,5 +1,7 @@
 using System.IO;
 using System.Text.Json;
+using Microsoft.Extensions.Options;
+using PadInspector.Configs;
 using PadInspector.Models;
 
 namespace PadInspector.Services;
@@ -14,22 +16,26 @@ public class RecipeService : IRecipeService
     public event EventHandler<Recipe>? RecipeChanged;
 
     private readonly string _recipeDir;
+    private readonly string _defaultName;
     private readonly List<string> _recipeNames = [];
 
     public Recipe CurrentRecipe { get; private set; } = new();
     public IReadOnlyList<string> RecipeNames => _recipeNames;
 
-    public RecipeService()
+    public RecipeService(IOptions<RecipeSettings> options)
     {
-        _recipeDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Recipes");
+        var settings = options.Value;
+        _recipeDir = Path.IsPathRooted(settings.BasePath)
+            ? settings.BasePath
+            : Path.Combine(AppDomain.CurrentDomain.BaseDirectory, settings.BasePath);
+        _defaultName = settings.DefaultRecipeName;
         Directory.CreateDirectory(_recipeDir);
 
         Refresh();
 
-        // 레시피가 없으면 기본 레시피 생성
         if (_recipeNames.Count == 0)
         {
-            Save(new Recipe { Name = "Default", Description = "기본 레시피" });
+            Save(new Recipe { Name = _defaultName, Description = "기본 레시피" });
             Refresh();
         }
 
@@ -60,6 +66,8 @@ public class RecipeService : IRecipeService
 
     public void Save(Recipe recipe)
     {
+        if (recipe.CreatedAt == default)
+            recipe.CreatedAt = DateTime.Now;
         recipe.ModifiedAt = DateTime.Now;
         var path = GetPath(recipe.Name);
         var json = JsonSerializer.Serialize(recipe, JsonOptions);

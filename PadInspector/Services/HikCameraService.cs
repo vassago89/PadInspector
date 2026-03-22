@@ -1,5 +1,4 @@
 using System.Runtime.InteropServices;
-using Microsoft.Extensions.Options;
 using MvCameraControl;
 using OpenCvSharp;
 using PadInspector.Configs;
@@ -8,21 +7,26 @@ namespace PadInspector.Services;
 
 /// <summary>
 /// HIK 라인스캔 카메라 서비스 (MVS SDK - MvCameraControl.Net)
+/// IO 신호로 촬영 시작/완료를 제어하는 하드웨어 트리거 방식
 /// </summary>
 public class HikCameraService : ICameraService
 {
     public event EventHandler<Mat>? ImageGrabbed;
 
-    private readonly CameraSettings _settings;
+    private readonly CameraConfig _config;
+    private readonly ILogService _logService;
     private IDevice? _device;
+    private CancellationTokenSource? _grabCts;
     private bool _isGrabbing;
 
+    public string Name => _config.Name;
     public bool IsConnected => _device != null;
     public bool IsGrabbing => _isGrabbing;
 
-    public HikCameraService(IOptions<CameraSettings> options)
+    public HikCameraService(CameraConfig config, ILogService logService)
     {
-        _settings = options.Value;
+        _config = config;
+        _logService = logService;
     }
 
     public async Task<bool> ConnectAsync()
@@ -31,7 +35,6 @@ public class HikCameraService : ICameraService
         {
             try
             {
-                // 디바이스 열거
                 int ret = DeviceEnumerator.EnumDevices(
                     DeviceTLayerType.MvGigEDevice | DeviceTLayerType.MvUsbDevice,
                     out var deviceInfoList);
@@ -39,17 +42,29 @@ public class HikCameraService : ICameraService
                 if (ret != 0 || deviceInfoList == null || deviceInfoList.Count == 0)
                     return false;
 
-                // 첫 번째 카메라에 연결
-                _device = DeviceFactory.CreateDevice(deviceInfoList[0]);
-                _device.Open();
+                if (string.IsNullOrEmpty(_config.SerialNumber))
+                    return false;
 
-                // 라인스캔 카메라 설정
+                IDeviceInfo? targetDevice = null;
+                foreach (var devInfo in deviceInfoList)
+                {
+                    if (devInfo.SerialNumber == _config.SerialNumber)
+                    {
+                        targetDevice = devInfo;
+                        break;
+                    }
+                }
+                if (targetDevice == null) return false;
+
+                _device = DeviceFactory.CreateDevice(targetDevice);
+                _device.Open();
                 ConfigureLineScan();
 
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                _logService.Log("ERR", $"[{_config.Name}] 카메라 연결 실패: {ex.Message}");
                 _device = null;
                 return false;
             }
@@ -62,13 +77,14 @@ public class HikCameraService : ICameraService
 
         try
         {
-            _device.Parameters.SetEnumValueByString("TriggerMode", _settings.TriggerMode);
-            _device.Parameters.SetEnumValueByString("TriggerSource", _settings.TriggerSource);
-            _device.Parameters.SetEnumValueByString("PixelFormat", _settings.PixelFormat);
+            _device.Parameters.SetEnumValueByString("TriggerMode", _config.TriggerMode);
+            _device.Parameters.SetEnumValueByString("TriggerSource", _config.TriggerSource);
+            _device.Parameters.SetEnumValueByString("TriggerActivation", _config.TriggerActivation);
+            _device.Parameters.SetEnumValueByString("PixelFormat", _config.PixelFormat);
         }
-        catch
+        catch (Exception ex)
         {
-            // 카메라에 따라 지원하지 않는 파라미터가 있을 수 있음
+            _logService.Log("ERR", $"[{_config.Name}] 파라미터 설정 실패: {ex.Message}");
         }
     }
 
@@ -82,29 +98,33 @@ public class HikCameraService : ICameraService
             _isGrabbing = true;
         });
 
-        _ = Task.Run(GrabLoop);
+        _grabCts = new CancellationTokenSource();
+        var token = _grabCts.Token;
+        _ = Task.Run(() => GrabLoop(token), token);
     }
 
-    private void GrabLoop()
+    private void GrabLoop(CancellationToken ct)
     {
-        while (_isGrabbing && _device != null)
+        while (!ct.IsCancellationRequested && _device != null)
         {
             try
             {
-                int ret = _device.StreamGrabber.GetImageBuffer((uint)_settings.GrabTimeoutMs, out var frameOut);
+                int ret = _device.StreamGrabber.GetImageBuffer((uint)_config.GrabTimeoutMs, out var frameOut);
                 if (ret == 0 && frameOut != null)
                 {
                     var mat = ConvertToMat(frameOut);
                     if (mat != null)
-                    {
                         ImageGrabbed?.Invoke(this, mat);
-                    }
                     _device.StreamGrabber.FreeImageBuffer(frameOut);
                 }
             }
+            catch when (ct.IsCancellationRequested)
+            {
+                break;
+            }
             catch
             {
-                // Timeout or grab error - continue
+                // Grab timeout - normal when waiting for hardware trigger
             }
         }
     }
@@ -117,7 +137,6 @@ public class HikCameraService : ICameraService
             int width = (int)image.Width;
             int height = (int)image.Height;
 
-            // PixelData returns managed byte[] (copy from unmanaged)
             byte[] pixelData = image.PixelData;
             var mat = new Mat(height, width, MatType.CV_8UC1);
             Marshal.Copy(pixelData, 0, mat.Data, pixelData.Length);
@@ -129,43 +148,10 @@ public class HikCameraService : ICameraService
         }
     }
 
-    public async Task<Mat?> GrabSingleAsync()
-    {
-        if (_device == null) return null;
-
-        return await Task.Run(() =>
-        {
-            try
-            {
-                // 소프트웨어 트리거로 전환
-                _device.Parameters.SetEnumValueByString("TriggerSource", "Software");
-                _device.StreamGrabber.StartGrabbing();
-                _device.Parameters.SetCommandValue("TriggerSoftware");
-
-                int ret = _device.StreamGrabber.GetImageBuffer((uint)_settings.SingleGrabTimeoutMs, out var frameOut);
-                Mat? mat = null;
-                if (ret == 0 && frameOut != null)
-                {
-                    mat = ConvertToMat(frameOut);
-                    _device.StreamGrabber.FreeImageBuffer(frameOut);
-                }
-
-                _device.StreamGrabber.StopGrabbing();
-                // 외부 트리거로 복원
-                _device.Parameters.SetEnumValueByString("TriggerSource", _settings.TriggerSource);
-
-                return mat;
-            }
-            catch
-            {
-                return null;
-            }
-        });
-    }
-
     public void StopGrab()
     {
         _isGrabbing = false;
+        _grabCts?.Cancel();
         try
         {
             _device?.StreamGrabber.StopGrabbing();
@@ -187,5 +173,6 @@ public class HikCameraService : ICameraService
     public void Dispose()
     {
         Disconnect();
+        _grabCts?.Dispose();
     }
 }

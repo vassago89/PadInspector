@@ -34,16 +34,20 @@ public class InspectionService : IInspectionService
         PassScoreThreshold = recipe.PassScoreThreshold;
     }
 
-    public InspectionResult Inspect(Mat image)
+    public InspectionResult Inspect(Mat image, RoiRect? roi = null)
     {
         _inspectionCount++;
 
         try
         {
+            // ROI 크롭
+            using var cropped = CropRoi(image, roi);
+            var target = cropped ?? image;
+
             // Grayscale 변환
-            using var gray = image.Channels() > 1
-                ? image.CvtColor(ColorConversionCodes.BGR2GRAY)
-                : image.Clone();
+            using var gray = target.Channels() > 1
+                ? target.CvtColor(ColorConversionCodes.BGR2GRAY)
+                : target.Clone();
 
             // 이진화
             using var binary = gray.Threshold(ThresholdValue, 255, ThresholdTypes.Binary);
@@ -51,7 +55,7 @@ public class InspectionService : IInspectionService
             // 윤곽선 검출
             binary.FindContours(out var contours, out _, RetrievalModes.External, ContourApproximationModes.ApproxSimple);
 
-            double imageArea = image.Width * image.Height;
+            double imageArea = target.Width * target.Height;
             var validContours = contours
                 .Where(c =>
                 {
@@ -74,8 +78,8 @@ public class InspectionService : IInspectionService
                 IsPass = isPass,
                 Score = score,
                 Description = isPass
-                    ? $"OK - 패드 {validContours.Length}개 검출 ({score}%)"
-                    : $"NG - 패드 미검출 또는 비정상 ({score}%)"
+                    ? $"OK - 패드 {validContours.Length}개 ({score}%)"
+                    : $"NG - ({score}%)"
             };
         }
         catch (Exception ex)
@@ -89,5 +93,19 @@ public class InspectionService : IInspectionService
                 Description = $"검사 오류: {ex.Message}"
             };
         }
+    }
+
+    private static Mat? CropRoi(Mat image, RoiRect? roi)
+    {
+        if (roi == null || roi.IsFullImage) return null;
+
+        int x = Math.Max(0, (int)(roi.X * image.Width));
+        int y = Math.Max(0, (int)(roi.Y * image.Height));
+        int w = Math.Min(image.Width - x, (int)(roi.Width * image.Width));
+        int h = Math.Min(image.Height - y, (int)(roi.Height * image.Height));
+
+        if (w <= 0 || h <= 0) return null;
+
+        return new Mat(image, new Rect(x, y, w, h));
     }
 }

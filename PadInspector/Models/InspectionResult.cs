@@ -3,6 +3,7 @@ namespace PadInspector.Models;
 public class InspectionResult
 {
     public int Id { get; set; }
+    public string CameraName { get; set; } = string.Empty;
     public DateTime Timestamp { get; set; } = DateTime.Now;
     public bool IsPass { get; set; }
     public string Description { get; set; } = string.Empty;

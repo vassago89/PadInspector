@@ -6,6 +6,7 @@ public interface ICameraService : IDisposable
 {
     event EventHandler<Mat>? ImageGrabbed;
 
+    string Name { get; }
     bool IsConnected { get; }
     bool IsGrabbing { get; }
 
@@ -13,5 +14,4 @@ public interface ICameraService : IDisposable
     void Disconnect();
     Task StartGrabAsync();
     void StopGrab();
-    Task<Mat?> GrabSingleAsync();
 }
