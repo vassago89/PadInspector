@@ -68,6 +68,16 @@ public partial class RecipeViewModel : ObservableObject
     private void Save()
     {
         var recipe = BuildFromUI();
+        var validation = RecipeValidationResult.Validate(recipe);
+        if (!validation.IsValid)
+        {
+            foreach (var error in validation.Errors)
+                _logService.Log("ERR", $"레시피 검증 실패: {error}");
+            return;
+        }
+        foreach (var warning in validation.Warnings)
+            _logService.Log("WARN", $"레시피 경고: {warning}");
+
         _recipeService.Save(recipe);
         RecipeChanged?.Invoke(recipe);
         _logService.Log("RECIPE", $"레시피 저장: {recipe.Name}");
@@ -93,6 +103,13 @@ public partial class RecipeViewModel : ObservableObject
     private void Delete()
     {
         if (SelectedName == null || Names.Count <= 1) return;
+
+        var result = System.Windows.MessageBox.Show(
+            $"레시피 '{SelectedName}'을(를) 삭제하시겠습니까?",
+            "삭제 확인",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Warning);
+        if (result != System.Windows.MessageBoxResult.Yes) return;
 
         var name = SelectedName;
         _recipeService.Delete(name);

@@ -11,7 +11,9 @@ public interface IStatisticsService
     double PassRate { get; }
     ObservableCollection<InspectionResult> Results { get; }
     ObservableCollection<double> YieldTrend { get; }
+    IReadOnlyDictionary<string, CameraStatistics> CameraStats { get; }
     event Action? Updated;
     void AddResult(InspectionResult result);
     void Reset();
+    CameraStatistics GetCameraStats(string cameraName);
 }

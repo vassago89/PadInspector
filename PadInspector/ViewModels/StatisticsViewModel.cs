@@ -24,6 +24,9 @@ public partial class StatisticsViewModel : ObservableObject, IDisposable
     public ICollectionView FilteredResults { get; }
 
     [ObservableProperty] private string _filter = "All";
+    [ObservableProperty] private string _cameraFilter = "All";
+
+    public IReadOnlyDictionary<string, CameraStatistics> CameraStats => _statisticsService.CameraStats;
 
     public StatisticsViewModel(IStatisticsService statisticsService, ILogService logService)
     {
@@ -39,20 +42,37 @@ public partial class StatisticsViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(PassCount));
         OnPropertyChanged(nameof(FailCount));
         OnPropertyChanged(nameof(PassRate));
+        OnPropertyChanged(nameof(CameraStats));
     }
 
-    partial void OnFilterChanged(string value)
+    partial void OnFilterChanged(string value) => ApplyFilters();
+    partial void OnCameraFilterChanged(string value) => ApplyFilters();
+
+    private void ApplyFilters()
     {
-        FilteredResults.Filter = value switch
+        FilteredResults.Filter = obj =>
         {
-            "Pass" => obj => obj is InspectionResult { IsPass: true },
-            "Fail" => obj => obj is InspectionResult { IsPass: false },
-            _ => null
+            if (obj is not InspectionResult result) return false;
+
+            // 카메라 필터
+            if (CameraFilter != "All" && result.CameraName != CameraFilter)
+                return false;
+
+            // Pass/Fail 필터
+            return Filter switch
+            {
+                "Pass" => result.IsPass,
+                "Fail" => !result.IsPass,
+                _ => true
+            };
         };
     }
 
     [RelayCommand]
     private void SetFilter(string filter) => Filter = filter;
+
+    [RelayCommand]
+    private void SetCameraFilter(string cameraName) => CameraFilter = cameraName;
 
     [RelayCommand]
     private void ExportReport()

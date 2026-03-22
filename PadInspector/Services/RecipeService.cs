@@ -78,6 +78,14 @@ public class RecipeService : IRecipeService
         recipe.ModifiedAt = DateTime.Now;
 
         var path = GetPath(recipe.Name);
+
+        // 기존 파일 백업
+        if (File.Exists(path))
+        {
+            var backupPath = path + ".bak";
+            File.Copy(path, backupPath, overwrite: true);
+        }
+
         var json = JsonSerializer.Serialize(recipe, JsonOptions);
         File.WriteAllText(path, json);
 

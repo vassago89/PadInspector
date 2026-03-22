@@ -49,4 +49,40 @@
     <!-- Yield -->
     <sys:String x:Key="S.YieldTrend">수율 트렌드</sys:String>
 
+    <!-- Settings -->
+    <sys:String x:Key="S.Settings">설정</sys:String>
+    <sys:String x:Key="S.ImageSave">이미지 저장</sys:String>
+    <sys:String x:Key="S.Enabled">활성화</sys:String>
+    <sys:String x:Key="S.SaveOK">OK 저장</sys:String>
+    <sys:String x:Key="S.SaveNG">NG 저장</sys:String>
+    <sys:String x:Key="S.Path">경로</sys:String>
+    <sys:String x:Key="S.Format">포맷</sys:String>
+    <sys:String x:Key="S.MaxDays">최대 보관일</sys:String>
+    <sys:String x:Key="S.Alarm">알람</sys:String>
+    <sys:String x:Key="S.ConsecutiveNgThreshold">연속 NG 임계값</sys:String>
+    <sys:String x:Key="S.FileLog">파일 로그</sys:String>
+    <sys:String x:Key="S.MaxLines">최대 줄 수</sys:String>
+    <sys:String x:Key="S.CsvLog">CSV 로그</sys:String>
+    <sys:String x:Key="S.SaveSettings">설정 저장</sys:String>
+    <sys:String x:Key="S.RestartRequired">* 설정 적용을 위해 재시작이 필요합니다</sys:String>
+
+    <!-- Recipe Detail -->
+    <sys:String x:Key="S.Threshold">임계값</sys:String>
+    <sys:String x:Key="S.PassScore">합격 점수 (%)</sys:String>
+    <sys:String x:Key="S.MinArea">최소 면적</sys:String>
+    <sys:String x:Key="S.MaxArea">최대 면적</sys:String>
+    <sys:String x:Key="S.Exposure">노출 (us)</sys:String>
+    <sys:String x:Key="S.Gain">게인 (dB)</sys:String>
+    <sys:String x:Key="S.ROI">ROI (0~1)</sys:String>
+
+    <!-- Status -->
+    <sys:String x:Key="S.Total">전체</sys:String>
+    <sys:String x:Key="S.Pass">PASS</sys:String>
+    <sys:String x:Key="S.Fail">FAIL</sys:String>
+    <sys:String x:Key="S.Yield">수율</sys:String>
+    <sys:String x:Key="S.AppTitle">PAD INSPECTOR</sys:String>
+    <sys:String x:Key="S.DiskSpace">디스크 공간</sys:String>
+    <sys:String x:Key="S.AlarmHistory">알람 이력</sys:String>
+    <sys:String x:Key="S.CameraFilter">카메라 필터</sys:String>
+
 </ResourceDictionary>

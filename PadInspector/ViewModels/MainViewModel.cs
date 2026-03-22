@@ -20,6 +20,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly IAlarmService _alarmService;
     private readonly IIOOutputService _ioOutputService;
     private readonly ITestImageService _testImageService;
+    private readonly IImageCleanupService _imageCleanupService;
+    private readonly IDiskMonitorService _diskMonitorService;
     private readonly SynchronizationContext? _syncContext;
     private bool _disposed;
 
@@ -47,6 +49,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IAlarmService alarmService,
         IIOOutputService ioOutputService,
         ITestImageService testImageService,
+        IImageCleanupService imageCleanupService,
+        IDiskMonitorService diskMonitorService,
         IOptions<CamerasSettings> camerasOptions,
         ICameraServiceFactory cameraFactory,
         RecipeViewModel recipeViewModel,
@@ -61,6 +65,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _alarmService = alarmService;
         _ioOutputService = ioOutputService;
         _testImageService = testImageService;
+        _imageCleanupService = imageCleanupService;
+        _diskMonitorService = diskMonitorService;
         _syncContext = SynchronizationContext.Current;
 
         // Sub ViewModels (DI resolved)
@@ -82,7 +88,21 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _currentRecipe = GetCurrentRecipeFromVM();
         _inspectionService.ApplyRecipe(_currentRecipe);
 
+        // 백그라운드 서비스 시작
+        _imageCleanupService.Start();
+        _diskMonitorService.Start();
+        _diskMonitorService.DiskSpaceLow += OnDiskSpaceLow;
+
         _logService.Log("INFO", $"시스템 초기화 완료 (듀얼 카메라) | 레시피: {Recipe.RecipeName}");
+    }
+
+    private void OnDiskSpaceLow(long freeMb)
+    {
+        PostToUiThread(() =>
+        {
+            StatusMessage = $"디스크 공간 부족! 남은 공간: {freeMb}MB";
+            ShowError($"디스크 공간이 부족합니다.\n남은 공간: {freeMb}MB\n이미지 저장에 문제가 발생할 수 있습니다.");
+        });
     }
 
     private Recipe _currentRecipe = new();
@@ -236,6 +256,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void ResetCount()
     {
+        var result = System.Windows.MessageBox.Show(
+            "모든 검사 통계를 초기화하시겠습니까?",
+            "초기화 확인",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Question);
+        if (result != System.Windows.MessageBoxResult.Yes) return;
+
         Statistics.Reset();
         Camera1.LastResult = null;
         Camera2.LastResult = null;
@@ -370,9 +397,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
         Recipe.RecipeChanged -= OnRecipeChanged;
         _ioService.TriggerReceived -= OnTriggerReceived;
         _alarmService.AlarmStateChanged -= OnAlarmStateChanged;
+        _diskMonitorService.DiskSpaceLow -= OnDiskSpaceLow;
         _ioService.Dispose();
         Camera1.Dispose();
         Camera2.Dispose();
         Statistics.Dispose();
+        _imageCleanupService.Dispose();
+        _diskMonitorService.Dispose();
     }
 }

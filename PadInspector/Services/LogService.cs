@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using Microsoft.Extensions.Options;
 using PadInspector.Configs;
+using PadInspector.Models;
 
 namespace PadInspector.Services;
 
@@ -14,6 +15,7 @@ public class LogService : ILogService
     private string? _currentDate;
 
     public ObservableCollection<string> Messages { get; } = new();
+    public ObservableCollection<LogEntry> LogEntries { get; } = new();
 
     public LogService(IOptions<LogSettings> options)
     {
@@ -23,22 +25,33 @@ public class LogService : ILogService
 
     public void Log(string level, string message)
     {
-        var line = $"[{DateTime.Now:HH:mm:ss.fff}] [{level}] {message}";
+        var entry = new LogEntry
+        {
+            Timestamp = DateTime.Now,
+            Level = level,
+            Message = message
+        };
+
+        var line = entry.FormattedMessage;
 
         if (_syncContext == null || SynchronizationContext.Current == _syncContext)
-            AddLine(line);
+            AddLine(line, entry);
         else
-            _syncContext.Send(_ => AddLine(line), null);
+            _syncContext.Send(_ => AddLine(line, entry), null);
 
         if (_settings.EnableFileLog)
             WriteToFile(line);
     }
 
-    private void AddLine(string line)
+    private void AddLine(string line, LogEntry entry)
     {
         Messages.Add(line);
+        LogEntries.Add(entry);
         if (Messages.Count > _settings.MaxLogLines)
+        {
             Messages.RemoveAt(0);
+            LogEntries.RemoveAt(0);
+        }
     }
 
     private void WriteToFile(string line)
@@ -73,6 +86,7 @@ public class LogService : ILogService
     public void Clear()
     {
         Messages.Clear();
+        LogEntries.Clear();
     }
 
     public void Dispose()

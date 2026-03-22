@@ -1,5 +1,7 @@
+using System.Collections.ObjectModel;
 using Microsoft.Extensions.Options;
 using PadInspector.Configs;
+using PadInspector.Models;
 
 namespace PadInspector.Services;
 
@@ -11,6 +13,7 @@ public class AlarmService : IAlarmService
 
     public bool IsAlarm { get; private set; }
     public string AlarmMessage { get; private set; } = "";
+    public ObservableCollection<AlarmRecord> AlarmHistory { get; } = new();
 
     public event Action<bool, string>? AlarmStateChanged;
 
@@ -38,6 +41,19 @@ public class AlarmService : IAlarmService
                 IsAlarm = true;
                 AlarmMessage = $"[{cameraName}] 연속 NG {_consecutiveNgCounts[cameraName]}회 발생!";
                 _logService.Log("ALARM", AlarmMessage);
+
+                AlarmHistory.Insert(0, new AlarmRecord
+                {
+                    Timestamp = DateTime.Now,
+                    CameraName = cameraName,
+                    ConsecutiveNgCount = _consecutiveNgCounts[cameraName],
+                    Message = AlarmMessage
+                });
+
+                // 최대 100개 이력 유지
+                if (AlarmHistory.Count > 100)
+                    AlarmHistory.RemoveAt(AlarmHistory.Count - 1);
+
                 AlarmStateChanged?.Invoke(IsAlarm, AlarmMessage);
             }
         }
@@ -45,6 +61,12 @@ public class AlarmService : IAlarmService
 
     public void Clear()
     {
+        if (IsAlarm && AlarmHistory.Count > 0)
+        {
+            // 현재 알람에 해제 시간 기록
+            AlarmHistory[0].ClearedAt = DateTime.Now;
+        }
+
         IsAlarm = false;
         AlarmMessage = "";
         foreach (var key in _consecutiveNgCounts.Keys)
@@ -52,5 +74,9 @@ public class AlarmService : IAlarmService
         AlarmStateChanged?.Invoke(false, "");
     }
 
-    public void Reset() => Clear();
+    public void Reset()
+    {
+        Clear();
+        AlarmHistory.Clear();
+    }
 }

@@ -76,6 +76,8 @@ public partial class App : Application
         services.AddSingleton<IIOOutputService, IOOutputService>();
         services.AddSingleton<IStatisticsService, StatisticsService>();
         services.AddSingleton<ITestImageService, TestImageService>();
+        services.AddSingleton<IImageCleanupService, ImageCleanupService>();
+        services.AddSingleton<IDiskMonitorService, DiskMonitorService>();
 
         // ViewModels
         services.AddSingleton<RecipeViewModel>();

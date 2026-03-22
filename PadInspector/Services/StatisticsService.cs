@@ -10,6 +10,7 @@ public class StatisticsService : IStatisticsService
     private readonly int _maxResultHistory;
     private const int ChartWindowSize = 50;
     private readonly Queue<bool> _recentResults = new();
+    private readonly Dictionary<string, CameraStatistics> _cameraStats = new();
 
     public int TotalCount { get; private set; }
     public int PassCount { get; private set; }
@@ -18,6 +19,7 @@ public class StatisticsService : IStatisticsService
 
     public ObservableCollection<InspectionResult> Results { get; } = new();
     public ObservableCollection<double> YieldTrend { get; } = new();
+    public IReadOnlyDictionary<string, CameraStatistics> CameraStats => _cameraStats;
 
     public event Action? Updated;
 
@@ -36,6 +38,14 @@ public class StatisticsService : IStatisticsService
 
         PassRate = TotalCount > 0 ? Math.Round((double)PassCount / TotalCount * 100, 1) : 0;
 
+        // 카메라별 통계
+        if (!_cameraStats.TryGetValue(result.CameraName, out var camStats))
+        {
+            camStats = new CameraStatistics { CameraName = result.CameraName };
+            _cameraStats[result.CameraName] = camStats;
+        }
+        camStats.AddResult(result.IsPass);
+
         Results.Insert(0, result);
         if (Results.Count > _maxResultHistory)
             Results.RemoveAt(Results.Count - 1);
@@ -53,6 +63,13 @@ public class StatisticsService : IStatisticsService
         Updated?.Invoke();
     }
 
+    public CameraStatistics GetCameraStats(string cameraName)
+    {
+        if (_cameraStats.TryGetValue(cameraName, out var stats))
+            return stats;
+        return new CameraStatistics { CameraName = cameraName };
+    }
+
     public void Reset()
     {
         TotalCount = 0;
@@ -62,6 +79,7 @@ public class StatisticsService : IStatisticsService
         Results.Clear();
         YieldTrend.Clear();
         _recentResults.Clear();
+        _cameraStats.Clear();
         Updated?.Invoke();
     }
 }
