@@ -23,6 +23,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly IImageCleanupService _imageCleanupService;
     private readonly IDiskMonitorService _diskMonitorService;
     private readonly SynchronizationContext? _syncContext;
+    private readonly SemaphoreSlim _processLock = new(1, 1);
     private bool _disposed;
 
     public CameraViewModel Camera1 { get; }
@@ -308,6 +309,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private void ProcessImage(Mat image, CameraViewModel camera)
     {
+        if (!_processLock.Wait(0))
+        {
+            // 이전 처리가 진행 중이면 이미지 건너뛰기 (프레임 드롭)
+            if (!camera.IsConnected) image.Dispose();
+            return;
+        }
+
         try
         {
             // ── Background thread: inspection + overlay ──
@@ -348,6 +356,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
         finally
         {
+            _processLock.Release();
             if (!camera.IsConnected)
                 image.Dispose();
         }
@@ -392,17 +401,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
         if (_disposed) return;
         _disposed = true;
 
-        Camera1.ImageAcquired -= OnImageAcquired;
-        Camera2.ImageAcquired -= OnImageAcquired;
-        Recipe.RecipeChanged -= OnRecipeChanged;
-        _ioService.TriggerReceived -= OnTriggerReceived;
-        _alarmService.AlarmStateChanged -= OnAlarmStateChanged;
-        _diskMonitorService.DiskSpaceLow -= OnDiskSpaceLow;
-        _ioService.Dispose();
-        Camera1.Dispose();
-        Camera2.Dispose();
-        Statistics.Dispose();
-        _imageCleanupService.Dispose();
-        _diskMonitorService.Dispose();
+        try { Camera1.ImageAcquired -= OnImageAcquired; } catch { }
+        try { Camera2.ImageAcquired -= OnImageAcquired; } catch { }
+        try { Recipe.RecipeChanged -= OnRecipeChanged; } catch { }
+        try { _ioService.TriggerReceived -= OnTriggerReceived; } catch { }
+        try { _alarmService.AlarmStateChanged -= OnAlarmStateChanged; } catch { }
+        try { _diskMonitorService.DiskSpaceLow -= OnDiskSpaceLow; } catch { }
+        try { _ioService.Dispose(); } catch { }
+        try { Camera1.Dispose(); } catch { }
+        try { Camera2.Dispose(); } catch { }
+        try { Statistics.Dispose(); } catch { }
+        try { _imageCleanupService.Dispose(); } catch { }
+        try { _diskMonitorService.Dispose(); } catch { }
+        try { _processLock.Dispose(); } catch { }
     }
 }

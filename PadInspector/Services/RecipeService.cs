@@ -14,10 +14,14 @@ public class RecipeService : IRecipeService
     };
 
     public event EventHandler<Recipe>? RecipeChanged;
+    public event Action<string>? Error;
 
     private readonly string _recipeDir;
     private readonly string _defaultName;
     private readonly List<string> _recipeNames = [];
+    private readonly List<RecipeAuditEntry> _auditLog = [];
+
+    public IReadOnlyList<RecipeAuditEntry> AuditLog => _auditLog;
 
     public Recipe CurrentRecipe { get; private set; } = new();
     public IReadOnlyList<string> RecipeNames => _recipeNames;
@@ -63,11 +67,12 @@ public class RecipeService : IRecipeService
             if (recipe == null) return;
 
             CurrentRecipe = recipe;
+            AddAudit("Load", name, $"Threshold={recipe.ThresholdValue}, PassScore={recipe.PassScoreThreshold}");
             RecipeChanged?.Invoke(this, recipe);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // 파일 읽기/역직렬화 실패 시 현재 레시피 유지
+            Error?.Invoke($"레시피 '{name}' 로드 실패: {ex.Message}");
         }
     }
 
@@ -88,6 +93,7 @@ public class RecipeService : IRecipeService
 
         var json = JsonSerializer.Serialize(recipe, JsonOptions);
         File.WriteAllText(path, json);
+        AddAudit("Save", recipe.Name, $"Threshold={recipe.ThresholdValue}, PassScore={recipe.PassScoreThreshold}");
 
         if (!_recipeNames.Contains(recipe.Name))
         {
@@ -113,12 +119,28 @@ public class RecipeService : IRecipeService
             if (File.Exists(path))
                 File.Delete(path);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // 파일 삭제 실패 시에도 목록에서는 제거
+            Error?.Invoke($"레시피 '{name}' 삭제 실패: {ex.Message}");
         }
 
         _recipeNames.Remove(name);
+        AddAudit("Delete", name);
+    }
+
+    private void AddAudit(string action, string recipeName, string details = "")
+    {
+        _auditLog.Add(new RecipeAuditEntry
+        {
+            Timestamp = DateTime.Now,
+            Action = action,
+            RecipeName = recipeName,
+            Details = details
+        });
+
+        // 최대 500개 이력 유지
+        if (_auditLog.Count > 500)
+            _auditLog.RemoveAt(0);
     }
 
     private string GetPath(string name) => Path.Combine(_recipeDir, $"{name}.json");

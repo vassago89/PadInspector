@@ -27,7 +27,7 @@
                                    Foreground="{StaticResource AccentBrush}"
                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
-                    <TextBlock Text="PAD INSPECTOR" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"
+                    <TextBlock Text="{DynamicResource S.AppTitle}" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"
                                Foreground="{StaticResource MutedBrush}" Margin="0,0,24,0"/>
 
                     <!-- Start Button -->
@@ -95,14 +95,14 @@
                     <!-- Total -->
                     <Border Style="{StaticResource StatCard}" Background="{StaticResource NeutralBg}">
                         <StackPanel HorizontalAlignment="Center">
-                            <TextBlock Text="TOTAL" Style="{StaticResource StatLabel}"/>
+                            <TextBlock Text="{DynamicResource S.Total}" Style="{StaticResource StatLabel}"/>
                             <TextBlock Text="{Binding Statistics.TotalCount}" Style="{StaticResource StatValue}"/>
                         </StackPanel>
                     </Border>
                     <!-- Pass -->
                     <Border Style="{StaticResource StatCard}" Background="{StaticResource SuccessBg}">
                         <StackPanel HorizontalAlignment="Center">
-                            <TextBlock Text="PASS" Style="{StaticResource StatLabel}"
+                            <TextBlock Text="{DynamicResource S.Pass}" Style="{StaticResource StatLabel}"
                                        Foreground="{StaticResource SuccessBrush}" Opacity="1"/>
                             <TextBlock Text="{Binding Statistics.PassCount}" Style="{StaticResource StatValue}"
                                        Foreground="{StaticResource SuccessBrush}"/>
@@ -111,7 +111,7 @@
                     <!-- Fail -->
                     <Border Style="{StaticResource StatCard}" Background="{StaticResource DangerBg}">
                         <StackPanel HorizontalAlignment="Center">
-                            <TextBlock Text="FAIL" Style="{StaticResource StatLabel}"
+                            <TextBlock Text="{DynamicResource S.Fail}" Style="{StaticResource StatLabel}"
                                        Foreground="{StaticResource DangerBrush}" Opacity="1"/>
                             <TextBlock Text="{Binding Statistics.FailCount}" Style="{StaticResource StatValue}"
                                        Foreground="{StaticResource DangerBrush}"/>
@@ -121,7 +121,7 @@
                     <Border Style="{StaticResource StatCard}" Background="{StaticResource AccentBg}"
                             Margin="3,0,12,0">
                         <StackPanel HorizontalAlignment="Center">
-                            <TextBlock Text="YIELD" Style="{StaticResource StatLabel}"
+                            <TextBlock Text="{DynamicResource S.Yield}" Style="{StaticResource StatLabel}"
                                        Foreground="{StaticResource AccentBrush}" Opacity="1"/>
                             <TextBlock Style="{StaticResource StatValue}" Foreground="{StaticResource AccentBrush}">
                                 <Run Text="{Binding Statistics.PassRate, Mode=OneWay}"/><Run Text="%"/>
@@ -239,7 +239,7 @@
                         <Separator Margin="0,14,0,14" Opacity="0.3"/>
 
                         <!-- Settings -->
-                        <Expander Header="Settings">
+                        <Expander Header="{DynamicResource S.Settings}">
                             <ContentControl Content="{Binding Settings}" Margin="0,8,0,0"/>
                         </Expander>
                     </StackPanel>

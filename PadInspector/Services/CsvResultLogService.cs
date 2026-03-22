@@ -11,6 +11,10 @@ public class CsvResultLogService : IResultLogService, IDisposable
     private readonly object _lock = new();
     private string? _currentDate;
     private StreamWriter? _writer;
+    private int _consecutiveFailures;
+
+    public int ConsecutiveWriteFailures => _consecutiveFailures;
+    public event Action<string>? WriteError;
 
     public CsvResultLogService(IOptions<CsvLogSettings> options)
     {
@@ -35,10 +39,12 @@ public class CsvResultLogService : IResultLogService, IDisposable
                     $"\"{result.Description}\"",
                     $"\"{result.ImagePath}\""));
                 _writer?.Flush();
+                _consecutiveFailures = 0;
             }
-            catch
+            catch (Exception ex)
             {
-                // 로깅 실패 무시
+                _consecutiveFailures++;
+                WriteError?.Invoke($"CSV 로그 기록 실패 ({_consecutiveFailures}회 연속): {ex.Message}");
             }
         }
     }
