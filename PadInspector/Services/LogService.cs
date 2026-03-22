@@ -9,6 +9,7 @@ namespace PadInspector.Services;
 public class LogService : ILogService
 {
     private readonly LogSettings _settings;
+    private readonly string _logDirectory;
     private readonly SynchronizationContext? _syncContext;
     private readonly object _fileLock = new();
     private StreamWriter? _writer;
@@ -20,6 +21,9 @@ public class LogService : ILogService
     public LogService(IOptions<LogSettings> options)
     {
         _settings = options.Value;
+        _logDirectory = Path.IsPathRooted(_settings.LogDirectory)
+            ? _settings.LogDirectory
+            : Path.Combine(AppDomain.CurrentDomain.BaseDirectory, _settings.LogDirectory);
         _syncContext = SynchronizationContext.Current;
     }
 
@@ -80,8 +84,8 @@ public class LogService : ILogService
         _writer = null;
         _currentDate = null;
 
-        Directory.CreateDirectory(_settings.LogDirectory);
-        var path = Path.Combine(_settings.LogDirectory, $"Log_{date}.txt");
+        Directory.CreateDirectory(_logDirectory);
+        var path = Path.Combine(_logDirectory, $"Log_{date}.txt");
         _writer = new StreamWriter(path, append: true);
         _currentDate = date;
     }

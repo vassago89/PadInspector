@@ -98,6 +98,7 @@ public class HikCameraService : ICameraService
             _isGrabbing = true;
         });
 
+        _grabCts?.Dispose();
         _grabCts = new CancellationTokenSource();
         var token = _grabCts.Token;
         _ = Task.Run(() => GrabLoop(token), token);

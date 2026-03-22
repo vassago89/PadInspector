@@ -8,6 +8,7 @@ namespace PadInspector.Services;
 public class CsvResultLogService : IResultLogService, IDisposable
 {
     private readonly CsvLogSettings _settings;
+    private readonly string _basePath;
     private readonly object _lock = new();
     private string? _currentDate;
     private StreamWriter? _writer;
@@ -19,6 +20,9 @@ public class CsvResultLogService : IResultLogService, IDisposable
     public CsvResultLogService(IOptions<CsvLogSettings> options)
     {
         _settings = options.Value;
+        _basePath = Path.IsPathRooted(_settings.BasePath)
+            ? _settings.BasePath
+            : Path.Combine(AppDomain.CurrentDomain.BaseDirectory, _settings.BasePath);
     }
 
     public void Log(InspectionResult result)
@@ -55,8 +59,8 @@ public class CsvResultLogService : IResultLogService, IDisposable
         if (_currentDate == date && _writer != null) return;
 
         _writer?.Dispose();
-        Directory.CreateDirectory(_settings.BasePath);
-        var path = Path.Combine(_settings.BasePath, $"Result_{date}.csv");
+        Directory.CreateDirectory(_basePath);
+        var path = Path.Combine(_basePath, $"Result_{date}.csv");
         var isNew = !File.Exists(path);
         _writer = new StreamWriter(path, append: true);
         _currentDate = date;

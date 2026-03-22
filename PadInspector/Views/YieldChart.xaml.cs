@@ -47,6 +47,13 @@ public partial class YieldChart : UserControl
     public YieldChart()
     {
         InitializeComponent();
+        Unloaded += OnUnloaded;
+    }
+
+    private void OnUnloaded(object sender, RoutedEventArgs e)
+    {
+        if (Data is INotifyCollectionChanged collection)
+            collection.CollectionChanged -= OnCollectionChanged;
     }
 
     private static void OnDataChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
