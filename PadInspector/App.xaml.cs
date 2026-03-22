@@ -29,6 +29,20 @@ public partial class App : Application
         base.OnExit(e);
     }
 
+    public static void SetLanguage(string lang)
+    {
+        var dict = new ResourceDictionary
+        {
+            Source = new Uri($"Resources/Strings.{lang}.xaml", UriKind.Relative)
+        };
+
+        var merged = Current.Resources.MergedDictionaries;
+        if (merged.Count > 0)
+            merged[0] = dict;
+        else
+            merged.Insert(0, dict);
+    }
+
     private static void ConfigureServices(IServiceCollection services)
     {
         // Configuration

@@ -1,4 +1,6 @@
 using System.Collections.ObjectModel;
+using System.IO;
+using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PadInspector.Models;
@@ -8,6 +10,8 @@ namespace PadInspector.ViewModels;
 
 public partial class RecipeViewModel : ObservableObject
 {
+    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
+
     private readonly IRecipeService _recipeService;
     private readonly ILogService _logService;
     private bool _isInternalSelection;
@@ -95,6 +99,54 @@ public partial class RecipeViewModel : ObservableObject
         _logService.Log("RECIPE", $"레시피 삭제: {name}");
         RefreshList();
         SelectedName = Names.FirstOrDefault();
+    }
+
+    [RelayCommand]
+    private void Export()
+    {
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Filter = "JSON Files|*.json",
+            FileName = RecipeName
+        };
+        if (dialog.ShowDialog() != true) return;
+
+        try
+        {
+            var recipe = BuildFromUI();
+            var json = JsonSerializer.Serialize(recipe, JsonOptions);
+            File.WriteAllText(dialog.FileName, json);
+            _logService.Log("RECIPE", $"레시피 내보내기: {dialog.FileName}");
+        }
+        catch (Exception ex)
+        {
+            _logService.Log("ERR", $"레시피 내보내기 실패: {ex.Message}");
+        }
+    }
+
+    [RelayCommand]
+    private void Import()
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Filter = "JSON Files|*.json"
+        };
+        if (dialog.ShowDialog() != true) return;
+
+        try
+        {
+            var json = File.ReadAllText(dialog.FileName);
+            var recipe = JsonSerializer.Deserialize<Recipe>(json, JsonOptions);
+            if (recipe == null) return;
+
+            ApplyToUI(recipe);
+            RecipeChanged?.Invoke(recipe);
+            _logService.Log("RECIPE", $"레시피 가져오기: {dialog.FileName}");
+        }
+        catch (Exception ex)
+        {
+            _logService.Log("ERR", $"레시피 가져오기 실패: {ex.Message}");
+        }
     }
 
     private void RefreshList()

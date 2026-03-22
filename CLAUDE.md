@@ -2,6 +2,14 @@
 
 WPF .NET 10 factory pad inspection application using HIK (Hikvision) MVS SDK line scan cameras.
 
+## Prerequisites
+
+WPF is Windows-only. .NET 10 Preview SDK is required:
+
+```powershell
+winget install Microsoft.DotNet.SDK.Preview
+```
+
 ## Build & Run
 
 ```bash

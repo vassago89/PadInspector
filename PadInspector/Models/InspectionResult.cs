@@ -8,5 +8,6 @@ public class InspectionResult
     public bool IsPass { get; set; }
     public string Description { get; set; } = string.Empty;
     public double Score { get; set; }
+    public int PadCount { get; set; }
     public string ImagePath { get; set; } = string.Empty;
 }

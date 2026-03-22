@@ -1,0 +1,52 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+
+    <!-- Common -->
+    <sys:String x:Key="S.Start">Start</sys:String>
+    <sys:String x:Key="S.Stop">Stop</sys:String>
+    <sys:String x:Key="S.Reset">Reset</sys:String>
+    <sys:String x:Key="S.Clear">Clear</sys:String>
+    <sys:String x:Key="S.Save">Save</sys:String>
+    <sys:String x:Key="S.SaveAs">Save As</sys:String>
+    <sys:String x:Key="S.Delete">Delete</sys:String>
+    <sys:String x:Key="S.Import">Import</sys:String>
+    <sys:String x:Key="S.Export">Export</sys:String>
+    <sys:String x:Key="S.Name">Name</sys:String>
+    <sys:String x:Key="S.Description">Description</sys:String>
+
+    <!-- Top Bar -->
+    <sys:String x:Key="S.ManualTrigger">Manual Trigger</sys:String>
+
+    <!-- Camera -->
+    <sys:String x:Key="S.Camera">Camera</sys:String>
+    <sys:String x:Key="S.Connect">Connect</sys:String>
+    <sys:String x:Key="S.Disconnect">Disconnect</sys:String>
+
+    <!-- Auto Trigger -->
+    <sys:String x:Key="S.AutoTrigger">Auto Trigger</sys:String>
+    <sys:String x:Key="S.UseAutoTrigger">Use Auto Trigger</sys:String>
+    <sys:String x:Key="S.IntervalMs">Interval (ms)</sys:String>
+
+    <!-- Recipe -->
+    <sys:String x:Key="S.Recipe">Recipe</sys:String>
+    <sys:String x:Key="S.InspectionParams">Inspection Parameters</sys:String>
+
+    <!-- Statistics -->
+    <sys:String x:Key="S.InspectionHistory">Inspection History</sys:String>
+    <sys:String x:Key="S.Result">Result</sys:String>
+    <sys:String x:Key="S.Score">Score</sys:String>
+    <sys:String x:Key="S.Time">Time</sys:String>
+    <sys:String x:Key="S.ExportReport">Report</sys:String>
+    <sys:String x:Key="S.All">All</sys:String>
+
+    <!-- Log -->
+    <sys:String x:Key="S.Log">Log</sys:String>
+
+    <!-- Alarm -->
+    <sys:String x:Key="S.AlarmClear">Clear</sys:String>
+
+    <!-- Yield -->
+    <sys:String x:Key="S.YieldTrend">Yield Trend</sys:String>
+
+</ResourceDictionary>

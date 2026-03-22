@@ -102,6 +102,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         _currentRecipe = recipe;
         _inspectionService.ApplyRecipe(recipe);
+        ApplyCameraParameters();
     }
 
     private void OnAlarmStateChanged(bool isAlarm, string message)
@@ -110,12 +111,26 @@ public partial class MainViewModel : ObservableObject, IDisposable
         AlarmMessage = message;
     }
 
-    private void RunOnUiThread(Action action)
+    private void ApplyCameraParameters()
+    {
+        if (Camera1.IsConnected)
+        {
+            Camera1.ApplyExposure(_currentRecipe.ExposureTimeUs);
+            Camera1.ApplyGain(_currentRecipe.GainDb);
+        }
+        if (Camera2.IsConnected)
+        {
+            Camera2.ApplyExposure(_currentRecipe.ExposureTimeUs);
+            Camera2.ApplyGain(_currentRecipe.GainDb);
+        }
+    }
+
+    private void PostToUiThread(Action action)
     {
         if (_syncContext == null || SynchronizationContext.Current == _syncContext)
             action();
         else
-            _syncContext.Send(_ => action(), null);
+            _syncContext.Post(_ => action(), null);
     }
 
     #region 카메라 제어
@@ -131,6 +146,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _logService.Log("INFO", $"{Camera1.Name} {(results[0] ? "연결 성공" : "연결 실패 - 더미 모드")}");
         _logService.Log("INFO", $"{Camera2.Name} {(results[1] ? "연결 성공" : "연결 실패 - 더미 모드")}");
         StatusMessage = $"CAM1={CamStatus(results[0])} CAM2={CamStatus(results[1])}";
+
+        ApplyCameraParameters();
     }
 
     [RelayCommand]
@@ -245,48 +262,47 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         try
         {
-            var bitmapSource = image.ToBitmapSource();
-            bitmapSource.Freeze();
+            // ── Background thread: inspection + overlay ──
+            var roi = camera == Camera1 ? _currentRecipe.Camera1Roi : _currentRecipe.Camera2Roi;
+            var (result, overlay) = _inspectionService.Inspect(image, roi);
+            result.CameraName = camera.Name;
 
-            RunOnUiThread(() => ProcessImageOnUiThread(image, bitmapSource, camera));
+            // ── Background: convert overlay to frozen BitmapSource ──
+            var bitmapSource = overlay.ToBitmapSource();
+            bitmapSource.Freeze();
+            overlay.Dispose();
+
+            // ── Background: save original image + CSV log ──
+            var savedPath = _imageSaveService.Save(image, result);
+            if (savedPath != null)
+                result.ImagePath = savedPath;
+            _resultLogService.Log(result);
+
+            // ── Background: IO output ──
+            var cameraIndex = camera == Camera1 ? 0 : 1;
+            _ioOutputService.OutputResult(cameraIndex, result.IsPass);
+
+            // ── UI thread only (non-blocking) ──
+            PostToUiThread(() =>
+            {
+                camera.UpdateDisplay(bitmapSource, result);
+                Statistics.AddResult(result);
+                _alarmService.CheckResult(camera.Name, result.IsPass);
+                StatusMessage = $"[{camera.Name}] #{result.Id} {(result.IsPass ? "PASS" : "FAIL")} - {result.Description}";
+                _logService.Log(result.IsPass ? "PASS" : "FAIL",
+                    $"[{camera.Name}] #{result.Id} Score={result.Score}% Pads={result.PadCount} | Total={Statistics.TotalCount} P={Statistics.PassCount} F={Statistics.FailCount} Rate={Statistics.PassRate}%");
+            });
         }
         catch (Exception ex)
         {
-            RunOnUiThread(() =>
-            {
-                StatusMessage = $"[{camera.Name}] 처리 오류: {ex.Message}";
-                _logService.Log("ERR", $"[{camera.Name}] {ex.Message}");
-            });
+            _logService.Log("ERR", $"[{camera.Name}] {ex.Message}");
+            PostToUiThread(() => StatusMessage = $"[{camera.Name}] 처리 오류: {ex.Message}");
         }
         finally
         {
             if (!camera.IsConnected)
                 image.Dispose();
         }
-    }
-
-    private void ProcessImageOnUiThread(Mat image, BitmapSource bitmapSource, CameraViewModel camera)
-    {
-        var roi = camera == Camera1 ? _currentRecipe.Camera1Roi : _currentRecipe.Camera2Roi;
-        var result = _inspectionService.Inspect(image, roi);
-        result.CameraName = camera.Name;
-
-        var savedPath = _imageSaveService.Save(image, result);
-        if (savedPath != null)
-            result.ImagePath = savedPath;
-
-        _resultLogService.Log(result);
-
-        var cameraIndex = camera == Camera1 ? 0 : 1;
-        _ioOutputService.OutputResult(cameraIndex, result.IsPass);
-
-        camera.UpdateDisplay(bitmapSource, result);
-        Statistics.AddResult(result);
-        _alarmService.CheckResult(camera.Name, result.IsPass);
-
-        StatusMessage = $"[{camera.Name}] #{result.Id} {(result.IsPass ? "PASS" : "FAIL")} - {result.Description}";
-        _logService.Log(result.IsPass ? "PASS" : "FAIL",
-            $"[{camera.Name}] #{result.Id} Score={result.Score}% | Total={Statistics.TotalCount} P={Statistics.PassCount} F={Statistics.FailCount} Rate={Statistics.PassRate}%");
     }
 
     #endregion

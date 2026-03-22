@@ -13,7 +13,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- ═══ TOP BAR ═══ -->
+        <!-- TOP BAR -->
         <Border Grid.Row="0" Padding="16,8,16,8" Background="#0AFFFFFF"
                 BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
             <DockPanel>
@@ -27,7 +27,7 @@
                             IsEnabled="{Binding IsRunning, Converter={StaticResource InverseBool}}">
                         <StackPanel Orientation="Horizontal">
                             <Polygon Points="0,0 8,5 0,10" Fill="White" Margin="0,1,8,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="시작"/>
+                            <TextBlock Text="{DynamicResource S.Start}"/>
                         </StackPanel>
                     </Button>
                     <Button Padding="20,7" Margin="0,0,4,0" FontSize="13" FontWeight="SemiBold"
@@ -35,10 +35,10 @@
                             Command="{Binding StopCommand}" IsEnabled="{Binding IsRunning}">
                         <StackPanel Orientation="Horizontal">
                             <Rectangle Width="9" Height="9" Fill="White" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="정지"/>
+                            <TextBlock Text="{DynamicResource S.Stop}"/>
                         </StackPanel>
                     </Button>
-                    <Button Content="수동 트리거" Padding="14,7" FontSize="12"
+                    <Button Content="{DynamicResource S.ManualTrigger}" Padding="14,7" FontSize="12"
                             Command="{Binding ManualTriggerCommand}" HorizontalContentAlignment="Center"
                             IsEnabled="{Binding IsRunning}"/>
                     <Rectangle Width="1" Fill="{DynamicResource ControlStrokeColorDefaultBrush}" Margin="20,4"/>
@@ -87,7 +87,7 @@
                             </TextBlock>
                         </StackPanel>
                     </Border>
-                    <Button Content="초기화" Padding="10,6" VerticalAlignment="Center"
+                    <Button Content="{DynamicResource S.Reset}" Padding="10,6" VerticalAlignment="Center"
                             FontSize="11" Command="{Binding ResetCountCommand}"/>
                 </StackPanel>
             </DockPanel>
@@ -113,16 +113,16 @@
                            Margin="0,0,14,0" VerticalAlignment="Center"/>
                 <TextBlock Text="{Binding AlarmMessage}" Foreground="#DDFFFFFF"
                            FontSize="14" VerticalAlignment="Center" Margin="0,0,18,0"/>
-                <Button Content="해제" Command="{Binding ClearAlarmCommand}" Padding="16,5"/>
+                <Button Content="{DynamicResource S.AlarmClear}" Command="{Binding ClearAlarmCommand}" Padding="16,5"/>
             </StackPanel>
         </Border>
 
-        <!-- ═══ MAIN ═══ -->
+        <!-- MAIN -->
         <Grid Grid.Row="1" Margin="8,8,8,6">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="250"/>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="260"/>
+                <ColumnDefinition Width="300"/>
             </Grid.ColumnDefinitions>
 
             <!-- LEFT: Settings -->
@@ -132,16 +132,16 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="-2,0,-2,0">
                     <StackPanel>
                         <!-- Camera -->
-                        <TextBlock Text="카메라" FontWeight="SemiBold" FontSize="13" Opacity="0.9" Margin="0,0,0,8"/>
+                        <TextBlock Text="{DynamicResource S.Camera}" FontWeight="SemiBold" FontSize="13" Opacity="0.9" Margin="0,0,0,8"/>
                         <Grid Margin="0,0,0,8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="4"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Button Grid.Column="0" Content="연결" Padding="8,6" HorizontalContentAlignment="Center"
+                            <Button Grid.Column="0" Content="{DynamicResource S.Connect}" Padding="8,6" HorizontalContentAlignment="Center"
                                     Command="{Binding ConnectCamerasCommand}"/>
-                            <Button Grid.Column="2" Content="해제" Padding="8,6" HorizontalContentAlignment="Center"
+                            <Button Grid.Column="2" Content="{DynamicResource S.Disconnect}" Padding="8,6" HorizontalContentAlignment="Center"
                                     Command="{Binding DisconnectCamerasCommand}"/>
                         </Grid>
                         <Grid Margin="2,0,0,0">
@@ -169,11 +169,11 @@
                         <Separator Margin="0,14,0,14"/>
 
                         <!-- Auto Trigger -->
-                        <Expander Header="자동 트리거">
+                        <Expander Header="{DynamicResource S.AutoTrigger}">
                             <StackPanel Margin="0,10,0,0">
-                                <CheckBox Content="자동 트리거 사용" Margin="0,0,0,10"
+                                <CheckBox Content="{DynamicResource S.UseAutoTrigger}" Margin="0,0,0,10"
                                           IsChecked="{Binding AutoTrigger}"/>
-                                <TextBlock Text="주기 (ms)" FontSize="10" Opacity="0.35" Margin="0,0,0,3"/>
+                                <TextBlock Text="{DynamicResource S.IntervalMs}" FontSize="10" Opacity="0.35" Margin="0,0,0,3"/>
                                 <TextBox Text="{Binding Recipe.TriggerInterval, UpdateSourceTrigger=PropertyChanged}"/>
                             </StackPanel>
                         </Expander>
@@ -220,8 +220,8 @@
                         Padding="12,8,12,6" Background="#08FFFFFF">
                     <DockPanel>
                         <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
-                            <TextBlock Text="로그" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center" Opacity="0.7"/>
-                            <Button DockPanel.Dock="Right" Content="지우기" Padding="12,3" FontSize="11"
+                            <TextBlock Text="{DynamicResource S.Log}" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center" Opacity="0.7"/>
+                            <Button DockPanel.Dock="Right" Content="{DynamicResource S.Clear}" Padding="12,3" FontSize="11"
                                     HorizontalAlignment="Right" Command="{Binding ClearLogCommand}"/>
                         </DockPanel>
                         <ListBox x:Name="LogListBox" ItemsSource="{Binding LogService.Messages}"
@@ -244,19 +244,25 @@
                             HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
         </Grid>
 
-        <!-- ═══ STATUS BAR ═══ -->
+        <!-- STATUS BAR -->
         <Border Grid.Row="2" Padding="14,5" Background="#06FFFFFF"
                 BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="0,1,0,0">
             <DockPanel>
                 <TextBlock DockPanel.Dock="Left" Text="Pad Inspector v1.0" FontSize="10" Opacity="0.25"
                            VerticalAlignment="Center"/>
-                <TextBlock DockPanel.Dock="Right" FontSize="10" Opacity="0.35" HorizontalAlignment="Right"
-                           VerticalAlignment="Center">
-                    <Run Text="Total:"/><Run Text="{Binding Statistics.TotalCount, Mode=OneWay}"/>
-                    <Run Text="  Pass:"/><Run Text="{Binding Statistics.PassCount, Mode=OneWay}"/>
-                    <Run Text="  Fail:"/><Run Text="{Binding Statistics.FailCount, Mode=OneWay}"/>
-                    <Run Text="  Yield:"/><Run Text="{Binding Statistics.PassRate, Mode=OneWay}"/><Run Text="%"/>
-                </TextBlock>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right"
+                            VerticalAlignment="Center">
+                    <TextBlock FontSize="10" Opacity="0.35" VerticalAlignment="Center" Margin="0,0,16,0">
+                        <Run Text="Total:"/><Run Text="{Binding Statistics.TotalCount, Mode=OneWay}"/>
+                        <Run Text="  Pass:"/><Run Text="{Binding Statistics.PassCount, Mode=OneWay}"/>
+                        <Run Text="  Fail:"/><Run Text="{Binding Statistics.FailCount, Mode=OneWay}"/>
+                        <Run Text="  Yield:"/><Run Text="{Binding Statistics.PassRate, Mode=OneWay}"/><Run Text="%"/>
+                    </TextBlock>
+                    <Button Content="KO" Padding="6,2" FontSize="10" Margin="0,0,2,0"
+                            Click="OnKoreanClick"/>
+                    <Button Content="EN" Padding="6,2" FontSize="10"
+                            Click="OnEnglishClick"/>
+                </StackPanel>
             </DockPanel>
         </Border>
     </Grid>

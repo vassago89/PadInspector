@@ -5,15 +5,33 @@
             BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1"
             Background="#08FFFFFF">
         <DockPanel>
-            <TextBlock DockPanel.Dock="Top" Text="검사 이력" FontWeight="SemiBold" FontSize="13"
-                       Margin="2,0,0,10" Opacity="0.9"/>
-            <ListView ItemsSource="{Binding Results}" FontSize="11" BorderThickness="0"
-                      Background="Transparent">
+            <!-- Header -->
+            <TextBlock DockPanel.Dock="Top" Text="{DynamicResource S.InspectionHistory}"
+                       FontWeight="SemiBold" FontSize="13" Opacity="0.9" Margin="2,0,0,6"/>
+
+            <!-- Filter + Export -->
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="2,0,0,8">
+                <Button Content="{DynamicResource S.All}" Padding="10,3" FontSize="10" Margin="0,0,2,0"
+                        Command="{Binding SetFilterCommand}" CommandParameter="All"/>
+                <Button Content="P" Padding="10,3" FontSize="10" Margin="0,0,2,0" Foreground="#4CAF50"
+                        Command="{Binding SetFilterCommand}" CommandParameter="Pass"/>
+                <Button Content="F" Padding="10,3" FontSize="10" Margin="0,0,8,0" Foreground="#F44336"
+                        Command="{Binding SetFilterCommand}" CommandParameter="Fail"/>
+                <Button Content="{DynamicResource S.ExportReport}" Padding="10,3" FontSize="10"
+                        Command="{Binding ExportReportCommand}"/>
+            </StackPanel>
+
+            <ListView ItemsSource="{Binding FilteredResults}" FontSize="11" BorderThickness="0"
+                      Background="Transparent"
+                      ScrollViewer.HorizontalScrollBarVisibility="Auto">
                 <ListView.View>
                     <GridView>
-                        <GridViewColumn Header="#" Width="32" DisplayMemberBinding="{Binding Id}"/>
-                        <GridViewColumn Header="CAM" Width="48" DisplayMemberBinding="{Binding CameraName}"/>
-                        <GridViewColumn Header="판정" Width="48">
+                        <GridViewColumn Header="#" Width="34" DisplayMemberBinding="{Binding Id}"/>
+                        <GridViewColumn Header="CAM" Width="52" DisplayMemberBinding="{Binding CameraName}"/>
+                        <GridViewColumn Width="52">
+                            <GridViewColumn.Header>
+                                <TextBlock Text="{DynamicResource S.Result}"/>
+                            </GridViewColumn.Header>
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding IsPass, Converter={StaticResource BoolToPassFail}}"
@@ -22,8 +40,26 @@
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn Header="점수" Width="42" DisplayMemberBinding="{Binding Score}"/>
-                        <GridViewColumn Header="시간" Width="62" DisplayMemberBinding="{Binding Timestamp, StringFormat=HH:mm:ss}"/>
+                        <GridViewColumn Width="48">
+                            <GridViewColumn.Header>
+                                <TextBlock Text="{DynamicResource S.Score}"/>
+                            </GridViewColumn.Header>
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Score}"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Width="68">
+                            <GridViewColumn.Header>
+                                <TextBlock Text="{DynamicResource S.Time}"/>
+                            </GridViewColumn.Header>
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Timestamp, StringFormat=HH:mm:ss}"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
                     </GridView>
                 </ListView.View>
             </ListView>

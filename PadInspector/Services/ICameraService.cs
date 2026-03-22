@@ -14,4 +14,6 @@ public interface ICameraService : IDisposable
     void Disconnect();
     Task StartGrabAsync();
     void StopGrab();
+    void SetExposure(double exposureUs);
+    void SetGain(double gainDb);
 }

@@ -6,7 +6,7 @@ using PadInspector.Models;
 namespace PadInspector.Services;
 
 /// <summary>
-/// 패드 검사 서비스 - OpenCV 기반 영상 검사
+/// 패드 검사 서비스 - OpenCV 기반 영상 검사 + 오버레이 생성
 /// </summary>
 public class InspectionService : IInspectionService
 {
@@ -34,7 +34,7 @@ public class InspectionService : IInspectionService
         PassScoreThreshold = recipe.PassScoreThreshold;
     }
 
-    public InspectionResult Inspect(Mat image, RoiRect? roi = null)
+    public (InspectionResult Result, Mat Overlay) Inspect(Mat image, RoiRect? roi = null)
     {
         _inspectionCount++;
 
@@ -56,35 +56,43 @@ public class InspectionService : IInspectionService
             binary.FindContours(out var contours, out _, RetrievalModes.External, ContourApproximationModes.ApproxSimple);
 
             double imageArea = target.Width * target.Height;
-            var validContours = contours
-                .Where(c =>
-                {
-                    double area = Cv2.ContourArea(c);
-                    double ratio = area / imageArea;
-                    return ratio >= MinAreaRatio && ratio <= MaxAreaRatio;
-                })
-                .ToArray();
+            var validContours = new List<Point[]>();
+            var invalidContours = new List<Point[]>();
+
+            foreach (var c in contours)
+            {
+                double area = Cv2.ContourArea(c);
+                double ratio = area / imageArea;
+                if (ratio >= MinAreaRatio && ratio <= MaxAreaRatio)
+                    validContours.Add(c);
+                else
+                    invalidContours.Add(c);
+            }
 
             // 패드 영역 비율로 양/불량 판정
             double totalPadArea = validContours.Sum(c => Cv2.ContourArea(c));
             double padRatio = totalPadArea / imageArea;
             double score = Math.Round(padRatio * 100, 2);
-            bool isPass = validContours.Length > 0 && score > PassScoreThreshold;
+            bool isPass = validContours.Count > 0 && score > PassScoreThreshold;
 
-            return new InspectionResult
+            var result = new InspectionResult
             {
                 Id = _inspectionCount,
                 Timestamp = DateTime.Now,
                 IsPass = isPass,
                 Score = score,
+                PadCount = validContours.Count,
                 Description = isPass
-                    ? $"OK - 패드 {validContours.Length}개 ({score}%)"
+                    ? $"OK - 패드 {validContours.Count}개 ({score}%)"
                     : $"NG - ({score}%)"
             };
+
+            var overlay = DrawOverlay(image, roi, validContours, invalidContours, isPass, score);
+            return (result, overlay);
         }
         catch (Exception ex)
         {
-            return new InspectionResult
+            var result = new InspectionResult
             {
                 Id = _inspectionCount,
                 Timestamp = DateTime.Now,
@@ -92,7 +100,54 @@ public class InspectionService : IInspectionService
                 Score = 0,
                 Description = $"검사 오류: {ex.Message}"
             };
+
+            var overlay = image.Channels() == 1
+                ? image.CvtColor(ColorConversionCodes.GRAY2BGR)
+                : image.Clone();
+            return (result, overlay);
         }
+    }
+
+    private Mat DrawOverlay(Mat image, RoiRect? roi,
+        List<Point[]> validContours, List<Point[]> invalidContours,
+        bool isPass, double score)
+    {
+        var overlay = image.Channels() == 1
+            ? image.CvtColor(ColorConversionCodes.GRAY2BGR)
+            : image.Clone();
+
+        // ROI offset
+        int offsetX = 0, offsetY = 0;
+        if (roi != null && !roi.IsFullImage)
+        {
+            offsetX = Math.Max(0, (int)(roi.X * image.Width));
+            offsetY = Math.Max(0, (int)(roi.Y * image.Height));
+            int rw = Math.Min(image.Width - offsetX, (int)(roi.Width * image.Width));
+            int rh = Math.Min(image.Height - offsetY, (int)(roi.Height * image.Height));
+            Cv2.Rectangle(overlay, new Rect(offsetX, offsetY, rw, rh), new Scalar(0, 200, 200), 1);
+        }
+
+        // Valid contours (green)
+        foreach (var c in validContours)
+        {
+            var shifted = c.Select(p => new Point(p.X + offsetX, p.Y + offsetY)).ToArray();
+            Cv2.DrawContours(overlay, [shifted], 0, new Scalar(0, 220, 0), 2);
+        }
+
+        // Invalid contours (dim red)
+        foreach (var c in invalidContours)
+        {
+            var shifted = c.Select(p => new Point(p.X + offsetX, p.Y + offsetY)).ToArray();
+            Cv2.DrawContours(overlay, [shifted], 0, new Scalar(0, 0, 150), 1);
+        }
+
+        // Result text (outline + fill for readability)
+        var text = $"{(isPass ? "PASS" : "FAIL")} {score:F1}%  Pads:{validContours.Count}";
+        var textColor = isPass ? new Scalar(0, 220, 0) : new Scalar(0, 0, 255);
+        Cv2.PutText(overlay, text, new Point(8, 24), HersheyFonts.HersheySimplex, 0.6, new Scalar(0, 0, 0), 3);
+        Cv2.PutText(overlay, text, new Point(8, 24), HersheyFonts.HersheySimplex, 0.6, textColor, 1);
+
+        return overlay;
     }
 
     private static Mat? CropRoi(Mat image, RoiRect? roi)

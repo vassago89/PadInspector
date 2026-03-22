@@ -1,0 +1,52 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+
+    <!-- Common -->
+    <sys:String x:Key="S.Start">시작</sys:String>
+    <sys:String x:Key="S.Stop">정지</sys:String>
+    <sys:String x:Key="S.Reset">초기화</sys:String>
+    <sys:String x:Key="S.Clear">지우기</sys:String>
+    <sys:String x:Key="S.Save">저장</sys:String>
+    <sys:String x:Key="S.SaveAs">다른이름</sys:String>
+    <sys:String x:Key="S.Delete">삭제</sys:String>
+    <sys:String x:Key="S.Import">가져오기</sys:String>
+    <sys:String x:Key="S.Export">내보내기</sys:String>
+    <sys:String x:Key="S.Name">이름</sys:String>
+    <sys:String x:Key="S.Description">설명</sys:String>
+
+    <!-- Top Bar -->
+    <sys:String x:Key="S.ManualTrigger">수동 트리거</sys:String>
+
+    <!-- Camera -->
+    <sys:String x:Key="S.Camera">카메라</sys:String>
+    <sys:String x:Key="S.Connect">연결</sys:String>
+    <sys:String x:Key="S.Disconnect">해제</sys:String>
+
+    <!-- Auto Trigger -->
+    <sys:String x:Key="S.AutoTrigger">자동 트리거</sys:String>
+    <sys:String x:Key="S.UseAutoTrigger">자동 트리거 사용</sys:String>
+    <sys:String x:Key="S.IntervalMs">주기 (ms)</sys:String>
+
+    <!-- Recipe -->
+    <sys:String x:Key="S.Recipe">레시피</sys:String>
+    <sys:String x:Key="S.InspectionParams">검사 파라미터</sys:String>
+
+    <!-- Statistics -->
+    <sys:String x:Key="S.InspectionHistory">검사 이력</sys:String>
+    <sys:String x:Key="S.Result">판정</sys:String>
+    <sys:String x:Key="S.Score">점수</sys:String>
+    <sys:String x:Key="S.Time">시간</sys:String>
+    <sys:String x:Key="S.ExportReport">리포트</sys:String>
+    <sys:String x:Key="S.All">전체</sys:String>
+
+    <!-- Log -->
+    <sys:String x:Key="S.Log">로그</sys:String>
+
+    <!-- Alarm -->
+    <sys:String x:Key="S.AlarmClear">해제</sys:String>
+
+    <!-- Yield -->
+    <sys:String x:Key="S.YieldTrend">수율 트렌드</sys:String>
+
+</ResourceDictionary>

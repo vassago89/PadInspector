@@ -12,11 +12,13 @@ public partial class MainWindow : Window
         DataContext = viewModel;
         Closed += (_, _) => viewModel.Dispose();
 
-        // 로그 자동 스크롤
         ((INotifyCollectionChanged)viewModel.LogService.Messages).CollectionChanged += (_, _) =>
         {
             if (LogListBox.Items.Count > 0)
                 LogListBox.ScrollIntoView(LogListBox.Items[^1]);
         };
     }
+
+    private void OnKoreanClick(object sender, RoutedEventArgs e) => App.SetLanguage("ko");
+    private void OnEnglishClick(object sender, RoutedEventArgs e) => App.SetLanguage("en");
 }

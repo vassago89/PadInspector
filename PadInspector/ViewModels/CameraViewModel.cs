@@ -50,6 +50,9 @@ public partial class CameraViewModel : ObservableObject, IDisposable
 
     public void StopGrab() => _cameraService.StopGrab();
 
+    public void ApplyExposure(double exposureUs) => _cameraService.SetExposure(exposureUs);
+    public void ApplyGain(double gainDb) => _cameraService.SetGain(gainDb);
+
     public void UpdateDisplay(BitmapSource bitmapSource, InspectionResult result)
     {
         Image = bitmapSource;

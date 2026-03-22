@@ -170,6 +170,18 @@ public class HikCameraService : ICameraService
         _device = null;
     }
 
+    public void SetExposure(double exposureUs)
+    {
+        try { _device?.Parameters.SetFloatValue("ExposureTime", (float)exposureUs); }
+        catch (Exception ex) { _logService.Log("ERR", $"[{_config.Name}] Exposure 설정 실패: {ex.Message}"); }
+    }
+
+    public void SetGain(double gainDb)
+    {
+        try { _device?.Parameters.SetFloatValue("Gain", (float)gainDb); }
+        catch (Exception ex) { _logService.Log("ERR", $"[{_config.Name}] Gain 설정 실패: {ex.Message}"); }
+    }
+
     public void Dispose()
     {
         Disconnect();

@@ -6,20 +6,26 @@
              xmlns:views="clr-namespace:PadInspector.Views"
              ThemeMode="Dark">
     <Application.Resources>
-        <!-- Converters -->
-        <conv:BoolToColorConverter x:Key="BoolToColor"/>
-        <conv:BoolToPassFailConverter x:Key="BoolToPassFail"/>
-        <conv:InverseBoolConverter x:Key="InverseBool"/>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Resources/Strings.ko.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
 
-        <!-- ViewModel -> View mapping -->
-        <DataTemplate DataType="{x:Type vm:CameraViewModel}">
-            <views:CameraView/>
-        </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:RecipeViewModel}">
-            <views:RecipeView/>
-        </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:StatisticsViewModel}">
-            <views:StatisticsView/>
-        </DataTemplate>
+            <!-- Converters -->
+            <conv:BoolToColorConverter x:Key="BoolToColor"/>
+            <conv:BoolToPassFailConverter x:Key="BoolToPassFail"/>
+            <conv:InverseBoolConverter x:Key="InverseBool"/>
+
+            <!-- ViewModel -> View mapping -->
+            <DataTemplate DataType="{x:Type vm:CameraViewModel}">
+                <views:CameraView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:RecipeViewModel}">
+                <views:RecipeView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:StatisticsViewModel}">
+                <views:StatisticsView/>
+            </DataTemplate>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>
