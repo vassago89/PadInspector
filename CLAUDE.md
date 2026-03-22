@@ -15,11 +15,13 @@ winget install Microsoft.DotNet.SDK.Preview
 ```bash
 dotnet build
 dotnet run --project PadInspector
+dotnet test PadInspector.Tests
 ```
 
 - Target: `net10.0-windows` (preview SDK required)
 - Solution: `PadInspector.slnx`
 - Clean build (0 warnings, 0 errors)
+- Tests: 18 passing (AlarmService, StatisticsService, InspectionService)
 
 ## Architecture
 
@@ -41,12 +43,15 @@ PadInspector/
 │   └── RecipeSettings.cs       BasePath, DefaultRecipeName
 ├── Converters/       # BoolToColor, BoolToPassFail, InverseBool
 ├── Models/           # Recipe, InspectionResult, IOSignal, RoiRect
+├── Resources/        # Localization
+│   ├── Strings.ko.xaml         Korean strings
+│   └── Strings.en.xaml         English strings
 ├── Services/         # Interfaces + implementations (12 pairs)
 │   ├── ICameraService / HikCameraService         (CancellationToken grab loop)
 │   ├── ICameraServiceFactory / HikCameraServiceFactory
 │   ├── IIOService / VirtualIOService / ModbusTcpIOService
 │   ├── IIOOutputService / IOOutputService         (channel mapping + pulse)
-│   ├── IInspectionService / InspectionService
+│   ├── IInspectionService / InspectionService     (overlay drawing)
 │   ├── IRecipeService / RecipeService
 │   ├── IImageSaveService / ImageSaveService
 │   ├── IResultLogService / CsvResultLogService
@@ -58,10 +63,11 @@ PadInspector/
 │   ├── MainViewModel.cs        Orchestrator (SynchronizationContext for UI dispatch)
 │   ├── CameraViewModel.cs      Accepts ICameraServiceFactory (not concrete)
 │   ├── RecipeViewModel.cs      Injected via DI (IRecipeService + ILogService)
-│   └── StatisticsViewModel.cs  Thin wrapper over IStatisticsService (IDisposable)
-├── Views/            # CameraView, RecipeView, StatisticsView, YieldChart, ZoomPanImage
-├── App.xaml(.cs)     # DI composition root, implicit DataTemplates, disposal chain
-├── MainWindow.xaml   # Shell layout (Fluent dark theme)
+│   ├── StatisticsViewModel.cs  Thin wrapper over IStatisticsService (IDisposable)
+│   └── SettingsViewModel.cs    Runtime config editor (appsettings.json)
+├── Views/            # CameraView, RecipeView, StatisticsView, SettingsView, YieldChart, ZoomPanImage
+├── App.xaml(.cs)     # DI composition root, implicit DataTemplates, disposal chain, language switching
+├── MainWindow.xaml   # Shell layout (Fluent dark/light theme)
 └── appsettings.json  # All configuration
 ```
 
@@ -70,25 +76,33 @@ PadInspector/
 All services and ViewModels are resolved through the DI container in `App.xaml.cs`.
 
 - **Factory pattern**: `ICameraServiceFactory` creates `ICameraService` instances per camera config; factory injects `ILogService` into each instance
-- **Sub-ViewModel injection**: `RecipeViewModel` and `StatisticsViewModel` registered as singletons in DI; `CameraViewModel` created via factory delegate in `MainViewModel`
+- **Sub-ViewModel injection**: `RecipeViewModel`, `StatisticsViewModel`, `SettingsViewModel` registered as singletons in DI; `CameraViewModel` created via factory delegate in `MainViewModel`
 - **Conditional registration**: `IIOService` resolves to `ModbusTcpIOService` or `VirtualIOService` based on `Modbus:Enabled` config
 - **IOptions<T>** pattern for all settings (9 config classes)
-- **Disposal chain**: `ServiceProvider.Dispose()` called in `App.OnExit()`, cascading to `ILogService`, `IResultLogService`, `IIOService`
-- **Implicit DataTemplates**: `App.xaml` maps ViewModel types to View UserControls (CameraView, RecipeView, StatisticsView)
+- **Disposal chain**: `MainViewModel.Dispose()` cascades to Camera1/2, Statistics; `ServiceProvider.Dispose()` in `App.OnExit()` handles ILogService, IResultLogService, IIOService
+- **Implicit DataTemplates**: `App.xaml` maps ViewModel types to View UserControls (CameraView, RecipeView, StatisticsView, SettingsView)
 - **No service locator**: No `public static IServiceProvider`
 
 ### Key Patterns
 
 - **Event-based communication**: Sub-VMs communicate via events (RecipeChanged, ImageAcquired) wired in MainViewModel
 - **SynchronizationContext**: LogService and MainViewModel use `SynchronizationContext` instead of WPF `Dispatcher` directly for UI thread dispatch
+- **Background processing**: Inspection, image save, CSV log, IO output run on background thread; only UI updates via `Post` (non-blocking)
+- **Image overlay**: InspectionService returns `(InspectionResult, Mat overlay)` with contours + ROI drawn; overlay converted to frozen BitmapSource on background thread
 - **Service extraction**: Business logic split into dedicated services (AlarmService, IOOutputService, StatisticsService, TestImageService) — ViewModels are thin orchestrators
-- **Thread-safe IO**: VirtualIOService uses `lock` + `async/await` reset; ModbusTcpIOService uses `ReadExact` for reliable stream reads + Modbus FC error validation
-- **CancellationToken**: HikCameraService GrabLoop supports cooperative cancellation via `CancellationTokenSource`
-- **Dispose guard**: MainViewModel uses `_disposed` flag to prevent double-dispose
+- **Thread-safe IO**: VirtualIOService uses `lock` + `async/await` reset + channel bounds check; ModbusTcpIOService uses `ReadExact` for reliable stream reads + Modbus FC error validation
+- **CancellationToken**: HikCameraService GrabLoop supports cooperative cancellation via `CancellationTokenSource`; `_isGrabbing` is `volatile`
+- **Dispose guard**: MainViewModel, CameraViewModel, StatisticsViewModel use `_disposed` flag to prevent double-dispose
 - **IO channel mapping**: Camera pass/fail output channels configured in `IOSettings`, consumed by `IOOutputService`
-- **Camera**: HikCameraService wraps MvCameraControl.Net SDK. Finds cameras by SerialNumber. IO trigger: Line0 RisingEdge
+- **Camera**: HikCameraService wraps MvCameraControl.Net SDK. Finds cameras by SerialNumber. IO trigger: Line0 RisingEdge. Real-time Exposure/Gain control via `SetExposure`/`SetGain`
 - **ROI**: Ratio-based (0~1) coordinates in Recipe. Applied in InspectionService.CropRoi()
-- **Theme**: WPF .NET 10 Fluent dark (`ThemeMode="Dark"`). Uses `{DynamicResource ControlStrokeColorDefaultBrush}`
+- **Theme**: WPF .NET 10 Fluent dark/light toggle (`ThemeMode`). Uses `{DynamicResource ControlStrokeColorDefaultBrush}`
+- **Localization**: KO/EN runtime switch via `App.SetLanguage()`, ResourceDictionary with `{DynamicResource S.xxx}` keys
+- **Result filtering**: StatisticsViewModel uses `ICollectionView` with filter predicate (All/Pass/Fail)
+- **Recipe import/export**: JSON file dialog in RecipeViewModel
+- **Settings UI**: SettingsViewModel edits appsettings.json directly (restart required for reload)
+- **Error handling**: MainViewModel shows MessageBox on camera connect / inspection start failures
+- **Frozen brushes**: YieldChart uses `static readonly` + `Freeze()` brushes to avoid per-redraw allocations
 
 ### Dependencies
 
@@ -97,6 +111,12 @@ All services and ViewModels are resolved through the DI container in `App.xaml.c
 - Microsoft.Extensions.Configuration/DI/Options
 - MvCameraControl.Net.dll (native, from MVS SDK install path)
 
+### Testing
+
+- xUnit test project: `PadInspector.Tests` (net10.0-windows)
+- FakeLogService for mocking ILogService
+- Tests cover: AlarmService (6), StatisticsService (6), InspectionService (6) with OpenCV Mat
+
 ### Configuration (appsettings.json)
 
 Sections: `Cameras`, `Inspection`, `IO`, `ImageSave`, `CsvLog`, `Alarm`, `Recipe`, `Modbus`, `Log`
@@ -104,12 +124,19 @@ Sections: `Cameras`, `Inspection`, `IO`, `ImageSave`, `CsvLog`, `Alarm`, `Recipe
 ## Features
 
 - Dual HIK line scan camera support with IO trigger
-- OpenCV-based pad inspection (threshold + contour)
+- OpenCV-based pad inspection (threshold + contour) with overlay visualization
+- Real-time camera Exposure/Gain control
 - NG image save, CSV result logging
 - Modbus TCP IO with response validation (or virtual IO for testing)
 - Per-camera ROI with ratio-based coordinates
-- Recipe management (save/load/delete)
-- Zoom/pan image viewer, canvas-based yield chart
+- Recipe management (save/load/delete/import/export)
+- Result filtering (All/Pass/Fail) with ICollectionView
+- Statistics report CSV export
+- Zoom/pan image viewer, canvas-based yield chart (frozen brushes)
 - Consecutive NG alarm with configurable threshold (AlarmService)
 - Statistics tracking with yield trend (StatisticsService)
 - File logging (optional, via LogSettings.EnableFileLog)
+- Korean/English localization with runtime switching
+- Dark/light theme toggle
+- Settings UI for runtime config editing (ImageSave, Alarm, Log, CsvLog)
+- Error handling with MessageBox notifications

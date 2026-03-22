@@ -90,8 +90,12 @@ public partial class StatisticsViewModel : ObservableObject, IDisposable
 
     public void Reset() => _statisticsService.Reset();
 
+    private bool _disposed;
+
     public void Dispose()
     {
+        if (_disposed) return;
+        _disposed = true;
         _statisticsService.Updated -= OnStatisticsUpdated;
     }
 }

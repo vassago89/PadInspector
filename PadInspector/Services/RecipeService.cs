@@ -56,12 +56,19 @@ public class RecipeService : IRecipeService
         var path = GetPath(name);
         if (!File.Exists(path)) return;
 
-        var json = File.ReadAllText(path);
-        var recipe = JsonSerializer.Deserialize<Recipe>(json, JsonOptions);
-        if (recipe == null) return;
+        try
+        {
+            var json = File.ReadAllText(path);
+            var recipe = JsonSerializer.Deserialize<Recipe>(json, JsonOptions);
+            if (recipe == null) return;
 
-        CurrentRecipe = recipe;
-        RecipeChanged?.Invoke(this, recipe);
+            CurrentRecipe = recipe;
+            RecipeChanged?.Invoke(this, recipe);
+        }
+        catch (Exception)
+        {
+            // 파일 읽기/역직렬화 실패 시 현재 레시피 유지
+        }
     }
 
     public void Save(Recipe recipe)
@@ -69,6 +76,7 @@ public class RecipeService : IRecipeService
         if (recipe.CreatedAt == default)
             recipe.CreatedAt = DateTime.Now;
         recipe.ModifiedAt = DateTime.Now;
+
         var path = GetPath(recipe.Name);
         var json = JsonSerializer.Serialize(recipe, JsonOptions);
         File.WriteAllText(path, json);
@@ -92,8 +100,15 @@ public class RecipeService : IRecipeService
     public void Delete(string name)
     {
         var path = GetPath(name);
-        if (File.Exists(path))
-            File.Delete(path);
+        try
+        {
+            if (File.Exists(path))
+                File.Delete(path);
+        }
+        catch (Exception)
+        {
+            // 파일 삭제 실패 시에도 목록에서는 제거
+        }
 
         _recipeNames.Remove(name);
     }

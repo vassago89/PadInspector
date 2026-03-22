@@ -10,6 +10,7 @@ namespace PadInspector.ViewModels;
 public partial class CameraViewModel : ObservableObject, IDisposable
 {
     private readonly ICameraService _cameraService;
+    private bool _disposed;
 
     [ObservableProperty] private BitmapSource? _image;
     [ObservableProperty] private bool _isConnected;
@@ -61,6 +62,9 @@ public partial class CameraViewModel : ObservableObject, IDisposable
 
     public void Dispose()
     {
+        if (_disposed) return;
+        _disposed = true;
+
         _cameraService.ImageGrabbed -= OnImageGrabbed;
         _cameraService.Dispose();
     }

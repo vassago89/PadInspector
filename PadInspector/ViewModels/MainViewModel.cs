@@ -373,5 +373,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _ioService.Dispose();
         Camera1.Dispose();
         Camera2.Dispose();
+        Statistics.Dispose();
     }
 }

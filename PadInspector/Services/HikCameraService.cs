@@ -17,7 +17,7 @@ public class HikCameraService : ICameraService
     private readonly ILogService _logService;
     private IDevice? _device;
     private CancellationTokenSource? _grabCts;
-    private bool _isGrabbing;
+    private volatile bool _isGrabbing;
 
     public string Name => _config.Name;
     public bool IsConnected => _device != null;

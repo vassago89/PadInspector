@@ -9,6 +9,23 @@ namespace PadInspector.Views;
 
 public partial class YieldChart : UserControl
 {
+    private static readonly Brush GridBrush = new SolidColorBrush(Color.FromArgb(40, 255, 255, 255));
+    private static readonly Brush LabelBrush = new SolidColorBrush(Color.FromRgb(0x6C, 0x70, 0x86));
+    private static readonly Brush LineBrush = new SolidColorBrush(Color.FromRgb(0x89, 0xB4, 0xFA));
+    private static readonly Brush GoodBrush = new SolidColorBrush(Colors.LimeGreen);
+    private static readonly Brush WarnBrush = new SolidColorBrush(Color.FromRgb(0xFA, 0xB3, 0x87));
+    private static readonly Brush BadBrush = new SolidColorBrush(Colors.Red);
+
+    static YieldChart()
+    {
+        GridBrush.Freeze();
+        LabelBrush.Freeze();
+        LineBrush.Freeze();
+        GoodBrush.Freeze();
+        WarnBrush.Freeze();
+        BadBrush.Freeze();
+    }
+
     public static readonly DependencyProperty DataProperty =
         DependencyProperty.Register(nameof(Data), typeof(ObservableCollection<double>), typeof(YieldChart),
             new PropertyMetadata(null, OnDataChanged));
@@ -51,8 +68,7 @@ public partial class YieldChart : UserControl
         double chartW = w - margin * 2;
         double chartH = h - margin * 2;
 
-        // 기준선 (목표 수율 등)
-        var gridBrush = new SolidColorBrush(Color.FromArgb(40, 255, 255, 255));
+        // Grid lines
         for (int pct = 0; pct <= 100; pct += 25)
         {
             double y = margin + chartH * (1 - pct / 100.0);
@@ -60,7 +76,7 @@ public partial class YieldChart : UserControl
             {
                 X1 = margin, X2 = margin + chartW,
                 Y1 = y, Y2 = y,
-                Stroke = gridBrush, StrokeThickness = 0.5
+                Stroke = GridBrush, StrokeThickness = 0.5
             };
             ChartCanvas.Children.Add(line);
 
@@ -69,7 +85,7 @@ public partial class YieldChart : UserControl
                 var txt = new TextBlock
                 {
                     Text = $"{pct}%", FontSize = 9,
-                    Foreground = new SolidColorBrush(Color.FromRgb(0x6C, 0x70, 0x86))
+                    Foreground = LabelBrush
                 };
                 Canvas.SetLeft(txt, margin);
                 Canvas.SetTop(txt, y - 7);
@@ -77,13 +93,13 @@ public partial class YieldChart : UserControl
             }
         }
 
-        // 데이터 라인
+        // Data line
         int count = data.Count;
         double step = chartW / Math.Max(count - 1, 1);
 
         var polyline = new Polyline
         {
-            Stroke = new SolidColorBrush(Color.FromRgb(0x89, 0xB4, 0xFA)),
+            Stroke = LineBrush,
             StrokeThickness = 1.5,
             StrokeLineJoin = PenLineJoin.Round
         };
@@ -97,24 +113,16 @@ public partial class YieldChart : UserControl
 
         ChartCanvas.Children.Add(polyline);
 
-        // 마지막 값 표시
-        if (count > 0)
+        // Last value
+        var lastVal = data[^1];
+        var brush = lastVal >= 90 ? GoodBrush : lastVal >= 70 ? WarnBrush : BadBrush;
+        var valueTxt = new TextBlock
         {
-            var lastVal = data[^1];
-            var brush = lastVal >= 90
-                ? new SolidColorBrush(Colors.LimeGreen)
-                : lastVal >= 70
-                    ? new SolidColorBrush(Color.FromRgb(0xFA, 0xB3, 0x87))
-                    : new SolidColorBrush(Colors.Red);
-
-            var txt = new TextBlock
-            {
-                Text = $"{lastVal:F1}%", FontSize = 10,
-                FontWeight = FontWeights.Bold, Foreground = brush
-            };
-            Canvas.SetRight(txt, margin);
-            Canvas.SetTop(txt, margin);
-            ChartCanvas.Children.Add(txt);
-        }
+            Text = $"{lastVal:F1}%", FontSize = 10,
+            FontWeight = FontWeights.Bold, Foreground = brush
+        };
+        Canvas.SetRight(valueTxt, margin);
+        Canvas.SetTop(valueTxt, margin);
+        ChartCanvas.Children.Add(valueTxt);
     }
 }

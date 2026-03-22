@@ -41,6 +41,7 @@ public class VirtualIOService : IIOService
     public void FireTrigger(int channel = 0)
     {
         if (!_isRunning) return;
+        if (channel < 0 || channel >= _inputs.Length) return;
 
         lock (_lock)
         {

@@ -19,7 +19,7 @@ public class TestImageService : ITestImageService
             Cv2.Rectangle(mat, new Rect(x, y, w, h), Scalar.All(200), -1);
         }
 
-        var noise = new Mat(mat.Size(), MatType.CV_8UC1);
+        using var noise = new Mat(mat.Size(), MatType.CV_8UC1);
         Cv2.Randn(noise, Scalar.All(0), Scalar.All(15));
         Cv2.Add(mat, noise, mat);
 
