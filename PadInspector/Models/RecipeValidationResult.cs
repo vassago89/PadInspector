@@ -62,7 +62,7 @@ public class RecipeValidationResult
         if (roi.Y < 0 || roi.Y >= 1) result.Errors.Add($"[{camName}] ROI Y 범위 오류: {roi.Y}");
         if (roi.Width <= 0 || roi.Width > 1) result.Errors.Add($"[{camName}] ROI Width 범위 오류: {roi.Width}");
         if (roi.Height <= 0 || roi.Height > 1) result.Errors.Add($"[{camName}] ROI Height 범위 오류: {roi.Height}");
-        if (roi.X + roi.Width > 1.01) result.Warnings.Add($"[{camName}] ROI가 이미지 경계를 초과합니다.");
-        if (roi.Y + roi.Height > 1.01) result.Warnings.Add($"[{camName}] ROI가 이미지 경계를 초과합니다.");
+        if (roi.X + roi.Width > 1.001) result.Warnings.Add($"[{camName}] ROI가 이미지 경계를 초과합니다.");
+        if (roi.Y + roi.Height > 1.001) result.Warnings.Add($"[{camName}] ROI가 이미지 경계를 초과합니다.");
     }
 }

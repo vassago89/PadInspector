@@ -36,7 +36,7 @@ public class InspectionService : IInspectionService
 
     public (InspectionResult Result, Mat Overlay) Inspect(Mat image, RoiRect? roi = null)
     {
-        _inspectionCount++;
+        var count = Interlocked.Increment(ref _inspectionCount);
 
         try
         {
@@ -77,7 +77,7 @@ public class InspectionService : IInspectionService
 
             var result = new InspectionResult
             {
-                Id = _inspectionCount,
+                Id = count,
                 Timestamp = DateTime.Now,
                 IsPass = isPass,
                 Score = score,
@@ -94,7 +94,7 @@ public class InspectionService : IInspectionService
         {
             var result = new InspectionResult
             {
-                Id = _inspectionCount,
+                Id = count,
                 Timestamp = DateTime.Now,
                 IsPass = false,
                 Score = 0,

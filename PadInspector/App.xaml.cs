@@ -41,10 +41,17 @@ public partial class App : Application
         };
 
         var merged = Current.Resources.MergedDictionaries;
-        if (merged.Count > 0)
-            merged[0] = dict;
+        var existing = merged.FirstOrDefault(d =>
+            d.Source?.OriginalString.Contains("Strings.") == true);
+        if (existing != null)
+        {
+            var idx = merged.IndexOf(existing);
+            merged[idx] = dict;
+        }
         else
+        {
             merged.Insert(0, dict);
+        }
     }
 
     private static void ValidateConfiguration(IServiceProvider sp)
@@ -60,6 +67,22 @@ public partial class App : Application
         var ioSettings = sp.GetRequiredService<IOptions<IOSettings>>().Value;
         if (ioSettings.OutputPulseMs <= 0)
             logService.Log("WARN", "IO OutputPulseMs 값이 0 이하입니다");
+
+        var channels = new[] {
+            ("Camera1Pass", ioSettings.Camera1PassChannel),
+            ("Camera1Fail", ioSettings.Camera1FailChannel),
+            ("Camera2Pass", ioSettings.Camera2PassChannel),
+            ("Camera2Fail", ioSettings.Camera2FailChannel)
+        };
+        foreach (var (name, ch) in channels)
+        {
+            if (ch < 0 || ch >= ioSettings.ChannelCount)
+                logService.Log("WARN", $"IO {name}Channel({ch})이 ChannelCount({ioSettings.ChannelCount}) 범위를 벗어납니다");
+        }
+
+        var channelValues = channels.Select(c => c.Item2).ToArray();
+        if (channelValues.Distinct().Count() < channelValues.Length)
+            logService.Log("WARN", "IO 출력 채널이 중복 설정되어 있습니다");
     }
 
     private static void WireServiceEvents(IServiceProvider sp)
