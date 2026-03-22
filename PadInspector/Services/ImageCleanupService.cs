@@ -39,31 +39,30 @@ public class ImageCleanupService : IImageCleanupService
         var deletedCount = 0;
         var cutoffDate = DateTime.Now.AddDays(-_settings.MaxDaysToKeep);
 
-        try
+        foreach (var dateDir in Directory.GetDirectories(_basePath))
         {
-            foreach (var dateDir in Directory.GetDirectories(_basePath))
-            {
-                var dirName = Path.GetFileName(dateDir);
-                if (DateTime.TryParseExact(dirName, "yyyyMMdd", null,
-                    System.Globalization.DateTimeStyles.None, out var dirDate))
-                {
-                    if (dirDate < cutoffDate)
-                    {
-                        var fileCount = Directory.GetFiles(dateDir, "*", SearchOption.AllDirectories).Length;
-                        Directory.Delete(dateDir, recursive: true);
-                        deletedCount += fileCount;
-                        _logService.Log("CLEANUP", $"오래된 이미지 폴더 삭제: {dirName} ({fileCount}개 파일)");
-                    }
-                }
-            }
+            var dirName = Path.GetFileName(dateDir);
+            if (!DateTime.TryParseExact(dirName, "yyyyMMdd", null,
+                System.Globalization.DateTimeStyles.None, out var dirDate))
+                continue;
 
-            if (deletedCount > 0)
-                _logService.Log("INFO", $"이미지 정리 완료: {deletedCount}개 파일 삭제 (보관기간: {_settings.MaxDaysToKeep}일)");
+            if (dirDate >= cutoffDate) continue;
+
+            try
+            {
+                var fileCount = Directory.GetFiles(dateDir, "*", SearchOption.AllDirectories).Length;
+                Directory.Delete(dateDir, recursive: true);
+                deletedCount += fileCount;
+                _logService.Log("CLEANUP", $"오래된 이미지 폴더 삭제: {dirName} ({fileCount}개 파일)");
+            }
+            catch (Exception ex)
+            {
+                _logService.Log("ERR", $"이미지 폴더 삭제 실패 [{dirName}]: {ex.Message}");
+            }
         }
-        catch (Exception ex)
-        {
-            _logService.Log("ERR", $"이미지 정리 실패: {ex.Message}");
-        }
+
+        if (deletedCount > 0)
+            _logService.Log("INFO", $"이미지 정리 완료: {deletedCount}개 파일 삭제 (보관기간: {_settings.MaxDaysToKeep}일)");
 
         return deletedCount;
     }

@@ -311,7 +311,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         if (!_processLock.Wait(0))
         {
-            // 이전 처리가 진행 중이면 이미지 건너뛰기 (프레임 드롭)
+            _logService.Log("WARN", $"[{camera.Name}] 프레임 드롭 (처리 중)");
             if (!camera.IsConnected) image.Dispose();
             return;
         }

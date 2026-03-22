@@ -91,7 +91,13 @@ public partial class SettingsViewModel : ObservableObject
             doc["CsvLog"]!["BasePath"] = CsvLogPath;
 
             var options = new JsonSerializerOptions { WriteIndented = true };
-            File.WriteAllText(SettingsPath, doc.ToJsonString(options));
+            var content = doc.ToJsonString(options);
+
+            // 원자적 쓰기: 임시 파일에 쓴 후 교체 (손상 방지)
+            var tempPath = SettingsPath + ".tmp";
+            File.WriteAllText(tempPath, content);
+            File.Copy(tempPath, SettingsPath, overwrite: true);
+            File.Delete(tempPath);
 
             _logService.Log("INFO", "설정 저장 완료 (재시작 후 적용)");
         }

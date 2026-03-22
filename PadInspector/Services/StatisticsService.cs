@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using Microsoft.Extensions.Options;
 using PadInspector.Configs;
@@ -10,7 +11,7 @@ public class StatisticsService : IStatisticsService
     private readonly int _maxResultHistory;
     private const int ChartWindowSize = 50;
     private readonly Queue<bool> _recentResults = new();
-    private readonly Dictionary<string, CameraStatistics> _cameraStats = new();
+    private readonly ConcurrentDictionary<string, CameraStatistics> _cameraStats = new();
 
     public int TotalCount { get; private set; }
     public int PassCount { get; private set; }
@@ -38,12 +39,9 @@ public class StatisticsService : IStatisticsService
 
         PassRate = TotalCount > 0 ? Math.Round((double)PassCount / TotalCount * 100, 1) : 0;
 
-        // 카메라별 통계
-        if (!_cameraStats.TryGetValue(result.CameraName, out var camStats))
-        {
-            camStats = new CameraStatistics { CameraName = result.CameraName };
-            _cameraStats[result.CameraName] = camStats;
-        }
+        // 카메라별 통계 (thread-safe)
+        var camStats = _cameraStats.GetOrAdd(result.CameraName,
+            name => new CameraStatistics { CameraName = name });
         camStats.AddResult(result.IsPass);
 
         Results.Insert(0, result);

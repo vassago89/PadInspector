@@ -129,7 +129,7 @@ public class HikCameraService : ICameraService
         }
     }
 
-    private static Mat? ConvertToMat(IFrameOut frameOut)
+    private Mat? ConvertToMat(IFrameOut frameOut)
     {
         try
         {
@@ -142,8 +142,9 @@ public class HikCameraService : ICameraService
             Marshal.Copy(pixelData, 0, mat.Data, pixelData.Length);
             return mat;
         }
-        catch
+        catch (Exception ex)
         {
+            _logService.Log("ERR", $"[{_config.Name}] Mat 변환 실패: {ex.Message}");
             return null;
         }
     }

@@ -77,6 +77,9 @@ public class LogService : ILogService
         if (_currentDate == date && _writer != null) return;
 
         _writer?.Dispose();
+        _writer = null;
+        _currentDate = null;
+
         Directory.CreateDirectory(_settings.LogDirectory);
         var path = Path.Combine(_settings.LogDirectory, $"Log_{date}.txt");
         _writer = new StreamWriter(path, append: true);
