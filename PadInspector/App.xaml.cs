@@ -61,15 +61,10 @@ public partial class App : Application
         services.Configure<ImageSaveSettings>(configuration.GetSection("ImageSave"));
         services.Configure<CsvLogSettings>(configuration.GetSection("CsvLog"));
         services.Configure<AlarmSettings>(configuration.GetSection("Alarm"));
-        services.Configure<ModbusSettings>(configuration.GetSection("Modbus"));
         services.Configure<RecipeSettings>(configuration.GetSection("Recipe"));
 
         // Services
-        var modbusEnabled = configuration.GetValue<bool>("Modbus:Enabled");
-        if (modbusEnabled)
-            services.AddSingleton<IIOService, ModbusTcpIOService>();
-        else
-            services.AddSingleton<IIOService, VirtualIOService>();
+        services.AddSingleton<IIOService, VirtualIOService>();
 
         services.AddSingleton<ICameraServiceFactory, HikCameraServiceFactory>();
         services.AddSingleton<IInspectionService, InspectionService>();

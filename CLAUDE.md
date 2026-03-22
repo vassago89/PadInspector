@@ -31,14 +31,13 @@ MVVM with CommunityToolkit.Mvvm + Microsoft.Extensions.DependencyInjection.
 
 ```
 PadInspector/
-├── Configs/          # IOptions<T> settings classes (9 files)
+├── Configs/          # IOptions<T> settings classes (8 files)
 │   ├── CameraSettings.cs      CamerasSettings, CameraConfig
 │   ├── InspectionSettings.cs
 │   ├── IOSettings.cs           output channel mapping, pulse duration
 │   ├── ImageSaveSettings.cs
 │   ├── CsvLogSettings.cs
 │   ├── AlarmSettings.cs
-│   ├── ModbusSettings.cs       connection + address settings only
 │   ├── LogSettings.cs
 │   └── RecipeSettings.cs       BasePath, DefaultRecipeName
 ├── Converters/       # BoolToColor, BoolToPassFail, InverseBool
@@ -49,7 +48,7 @@ PadInspector/
 ├── Services/         # Interfaces + implementations (12 pairs)
 │   ├── ICameraService / HikCameraService         (CancellationToken grab loop)
 │   ├── ICameraServiceFactory / HikCameraServiceFactory
-│   ├── IIOService / VirtualIOService / ModbusTcpIOService
+│   ├── IIOService / VirtualIOService
 │   ├── IIOOutputService / IOOutputService         (channel mapping + pulse)
 │   ├── IInspectionService / InspectionService     (overlay drawing)
 │   ├── IRecipeService / RecipeService
@@ -77,8 +76,7 @@ All services and ViewModels are resolved through the DI container in `App.xaml.c
 
 - **Factory pattern**: `ICameraServiceFactory` creates `ICameraService` instances per camera config; factory injects `ILogService` into each instance
 - **Sub-ViewModel injection**: `RecipeViewModel`, `StatisticsViewModel`, `SettingsViewModel` registered as singletons in DI; `CameraViewModel` created via factory delegate in `MainViewModel`
-- **Conditional registration**: `IIOService` resolves to `ModbusTcpIOService` or `VirtualIOService` based on `Modbus:Enabled` config
-- **IOptions<T>** pattern for all settings (9 config classes)
+- **IOptions<T>** pattern for all settings (8 config classes)
 - **Disposal chain**: `MainViewModel.Dispose()` cascades to Camera1/2, Statistics; `ServiceProvider.Dispose()` in `App.OnExit()` handles ILogService, IResultLogService, IIOService
 - **Implicit DataTemplates**: `App.xaml` maps ViewModel types to View UserControls (CameraView, RecipeView, StatisticsView, SettingsView)
 - **No service locator**: No `public static IServiceProvider`
@@ -90,7 +88,7 @@ All services and ViewModels are resolved through the DI container in `App.xaml.c
 - **Background processing**: Inspection, image save, CSV log, IO output run on background thread; only UI updates via `Post` (non-blocking)
 - **Image overlay**: InspectionService returns `(InspectionResult, Mat overlay)` with contours + ROI drawn; overlay converted to frozen BitmapSource on background thread
 - **Service extraction**: Business logic split into dedicated services (AlarmService, IOOutputService, StatisticsService, TestImageService) — ViewModels are thin orchestrators
-- **Thread-safe IO**: VirtualIOService uses `lock` + `async/await` reset + channel bounds check; ModbusTcpIOService uses `ReadExact` for reliable stream reads + Modbus FC error validation
+- **Thread-safe IO**: VirtualIOService uses `lock` + `async/await` reset + channel bounds check
 - **CancellationToken**: HikCameraService GrabLoop supports cooperative cancellation via `CancellationTokenSource`; `_isGrabbing` is `volatile`
 - **Dispose guard**: MainViewModel, CameraViewModel, StatisticsViewModel use `_disposed` flag to prevent double-dispose
 - **IO channel mapping**: Camera pass/fail output channels configured in `IOSettings`, consumed by `IOOutputService`
@@ -119,7 +117,7 @@ All services and ViewModels are resolved through the DI container in `App.xaml.c
 
 ### Configuration (appsettings.json)
 
-Sections: `Cameras`, `Inspection`, `IO`, `ImageSave`, `CsvLog`, `Alarm`, `Recipe`, `Modbus`, `Log`
+Sections: `Cameras`, `Inspection`, `IO`, `ImageSave`, `CsvLog`, `Alarm`, `Recipe`, `Log`
 
 ## Features
 
@@ -127,7 +125,7 @@ Sections: `Cameras`, `Inspection`, `IO`, `ImageSave`, `CsvLog`, `Alarm`, `Recipe
 - OpenCV-based pad inspection (threshold + contour) with overlay visualization
 - Real-time camera Exposure/Gain control
 - NG image save, CSV result logging
-- Modbus TCP IO with response validation (or virtual IO for testing)
+- Virtual IO for testing (trigger simulation, auto trigger)
 - Per-camera ROI with ratio-based coordinates
 - Recipe management (save/load/delete/import/export)
 - Result filtering (All/Pass/Fail) with ICollectionView
