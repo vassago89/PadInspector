@@ -1,6 +1,7 @@
 using System.Windows;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using PadInspector.Configs;
 using PadInspector.Services;
 using PadInspector.ViewModels;
@@ -18,6 +19,9 @@ public partial class App : Application
         var services = new ServiceCollection();
         ConfigureServices(services);
         _serviceProvider = services.BuildServiceProvider();
+
+        ValidateConfiguration(_serviceProvider);
+        WireServiceEvents(_serviceProvider);
 
         var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
         mainWindow.Show();
@@ -41,6 +45,31 @@ public partial class App : Application
             merged[0] = dict;
         else
             merged.Insert(0, dict);
+    }
+
+    private static void ValidateConfiguration(IServiceProvider sp)
+    {
+        var logService = sp.GetRequiredService<ILogService>();
+        var camSettings = sp.GetRequiredService<IOptions<CamerasSettings>>().Value;
+
+        if (string.IsNullOrEmpty(camSettings.Camera1.SerialNumber))
+            logService.Log("WARN", "CAM1 시리얼번호 미설정 - 더미 모드로 동작합니다");
+        if (string.IsNullOrEmpty(camSettings.Camera2.SerialNumber))
+            logService.Log("WARN", "CAM2 시리얼번호 미설정 - 더미 모드로 동작합니다");
+
+        var ioSettings = sp.GetRequiredService<IOptions<IOSettings>>().Value;
+        if (ioSettings.OutputPulseMs <= 0)
+            logService.Log("WARN", "IO OutputPulseMs 값이 0 이하입니다");
+    }
+
+    private static void WireServiceEvents(IServiceProvider sp)
+    {
+        var logService = sp.GetRequiredService<ILogService>();
+        var resultLogService = sp.GetRequiredService<IResultLogService>();
+        var recipeService = sp.GetRequiredService<IRecipeService>();
+
+        resultLogService.WriteError += msg => logService.Log("ERR", msg);
+        recipeService.Error += msg => logService.Log("ERR", msg);
     }
 
     private static void ConfigureServices(IServiceCollection services)

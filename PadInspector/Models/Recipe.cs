@@ -43,4 +43,15 @@ public class RoiRect
     public double Height { get; set; } = 1;
 
     public bool IsFullImage => X <= 0 && Y <= 0 && Width >= 1 && Height >= 1;
+
+    /// <summary>
+    /// 모든 값을 0~1 범위로 제한
+    /// </summary>
+    public RoiRect Clamp() => new()
+    {
+        X = Math.Clamp(X, 0, 1),
+        Y = Math.Clamp(Y, 0, 1),
+        Width = Math.Clamp(Width, 0, 1),
+        Height = Math.Clamp(Height, 0, 1)
+    };
 }

@@ -13,7 +13,11 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         DataContext = viewModel;
-        Closed += (_, _) => viewModel.Dispose();
+        Closed += (_, _) =>
+        {
+            _clock.Stop();
+            viewModel.Dispose();
+        };
 
         ((INotifyCollectionChanged)viewModel.LogService.Messages).CollectionChanged += (_, _) =>
         {

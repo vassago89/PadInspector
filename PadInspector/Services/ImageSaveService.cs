@@ -11,10 +11,15 @@ public class ImageSaveService : IImageSaveService
     private readonly ImageSaveSettings _settings;
     private readonly ILogService _logService;
 
+    private readonly string _basePath;
+
     public ImageSaveService(IOptions<ImageSaveSettings> options, ILogService logService)
     {
         _settings = options.Value;
         _logService = logService;
+        _basePath = Path.IsPathRooted(_settings.BasePath)
+            ? _settings.BasePath
+            : Path.Combine(AppDomain.CurrentDomain.BaseDirectory, _settings.BasePath);
     }
 
     public string? Save(Mat image, InspectionResult result)
@@ -27,7 +32,7 @@ public class ImageSaveService : IImageSaveService
         {
             var date = result.Timestamp.ToString("yyyyMMdd");
             var status = result.IsPass ? "OK" : "NG";
-            var dir = Path.Combine(_settings.BasePath, date, result.CameraName, status);
+            var dir = Path.Combine(_basePath, date, result.CameraName, status);
             Directory.CreateDirectory(dir);
 
             var fileName = $"{result.Timestamp:HHmmss_fff}_{result.Id}.{_settings.Format}";

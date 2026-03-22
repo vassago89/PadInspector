@@ -154,10 +154,11 @@ public class InspectionService : IInspectionService
     {
         if (roi == null || roi.IsFullImage) return null;
 
-        int x = Math.Max(0, (int)(roi.X * image.Width));
-        int y = Math.Max(0, (int)(roi.Y * image.Height));
-        int w = Math.Min(image.Width - x, (int)(roi.Width * image.Width));
-        int h = Math.Min(image.Height - y, (int)(roi.Height * image.Height));
+        var clamped = roi.Clamp();
+        int x = (int)(clamped.X * image.Width);
+        int y = (int)(clamped.Y * image.Height);
+        int w = Math.Min(image.Width - x, (int)(clamped.Width * image.Width));
+        int h = Math.Min(image.Height - y, (int)(clamped.Height * image.Height));
 
         if (w <= 0 || h <= 0) return null;
 

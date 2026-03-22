@@ -15,6 +15,8 @@ public partial class YieldChart : UserControl
     private static readonly Brush GoodBrush = new SolidColorBrush(Colors.LimeGreen);
     private static readonly Brush WarnBrush = new SolidColorBrush(Color.FromRgb(0xFA, 0xB3, 0x87));
     private static readonly Brush BadBrush = new SolidColorBrush(Colors.Red);
+    private static readonly Pen GridPen;
+    private static readonly Pen LinePen;
 
     static YieldChart()
     {
@@ -24,6 +26,10 @@ public partial class YieldChart : UserControl
         GoodBrush.Freeze();
         WarnBrush.Freeze();
         BadBrush.Freeze();
+        GridPen = new Pen(GridBrush, 0.5);
+        GridPen.Freeze();
+        LinePen = new Pen(LineBrush, 1.5) { LineJoin = PenLineJoin.Round };
+        LinePen.Freeze();
     }
 
     public static readonly DependencyProperty DataProperty =
@@ -35,6 +41,8 @@ public partial class YieldChart : UserControl
         get => (ObservableCollection<double>?)GetValue(DataProperty);
         set => SetValue(DataProperty, value);
     }
+
+    private bool _redrawPending;
 
     public YieldChart()
     {
@@ -48,11 +56,22 @@ public partial class YieldChart : UserControl
             old.CollectionChanged -= chart.OnCollectionChanged;
         if (e.NewValue is INotifyCollectionChanged @new)
             @new.CollectionChanged += chart.OnCollectionChanged;
-        chart.Redraw();
+        chart.RequestRedraw();
     }
 
-    private void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) => Redraw();
-    private void OnSizeChanged(object sender, SizeChangedEventArgs e) => Redraw();
+    private void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) => RequestRedraw();
+    private void OnSizeChanged(object sender, SizeChangedEventArgs e) => RequestRedraw();
+
+    private void RequestRedraw()
+    {
+        if (_redrawPending) return;
+        _redrawPending = true;
+        Dispatcher.InvokeAsync(() =>
+        {
+            _redrawPending = false;
+            Redraw();
+        }, System.Windows.Threading.DispatcherPriority.Render);
+    }
 
     private void Redraw()
     {
@@ -68,52 +87,52 @@ public partial class YieldChart : UserControl
         double chartW = w - margin * 2;
         double chartH = h - margin * 2;
 
-        // Grid lines
-        for (int pct = 0; pct <= 100; pct += 25)
+        // Grid lines + labels via single DrawingVisual (batch rendering)
+        var gridVisual = new DrawingVisual();
+        using (var dc = gridVisual.RenderOpen())
         {
-            double y = margin + chartH * (1 - pct / 100.0);
-            var line = new Line
+            for (int pct = 0; pct <= 100; pct += 25)
             {
-                X1 = margin, X2 = margin + chartW,
-                Y1 = y, Y2 = y,
-                Stroke = GridBrush, StrokeThickness = 0.5
-            };
-            ChartCanvas.Children.Add(line);
+                double y = margin + chartH * (1 - pct / 100.0);
+                dc.DrawLine(GridPen, new Point(margin, y), new Point(margin + chartW, y));
 
-            if (pct % 50 == 0)
-            {
-                var txt = new TextBlock
+                if (pct % 50 == 0)
                 {
-                    Text = $"{pct}%", FontSize = 9,
-                    Foreground = LabelBrush
-                };
-                Canvas.SetLeft(txt, margin);
-                Canvas.SetTop(txt, y - 7);
-                ChartCanvas.Children.Add(txt);
+                    var text = new FormattedText($"{pct}%",
+                        System.Globalization.CultureInfo.CurrentCulture,
+                        FlowDirection.LeftToRight,
+                        new Typeface("Segoe UI"), 9, LabelBrush,
+                        VisualTreeHelper.GetDpi(this).PixelsPerDip);
+                    dc.DrawText(text, new Point(margin, y - 7));
+                }
             }
+
+            // Data line via StreamGeometry (allocation-efficient)
+            int count = data.Count;
+            double step = chartW / Math.Max(count - 1, 1);
+
+            var geometry = new StreamGeometry();
+            using (var ctx = geometry.Open())
+            {
+                double x0 = margin;
+                double y0 = margin + chartH * (1 - Math.Clamp(data[0], 0, 100) / 100.0);
+                ctx.BeginFigure(new Point(x0, y0), false, false);
+
+                for (int i = 1; i < count; i++)
+                {
+                    double x = margin + i * step;
+                    double y = margin + chartH * (1 - Math.Clamp(data[i], 0, 100) / 100.0);
+                    ctx.LineTo(new Point(x, y), true, true);
+                }
+            }
+            geometry.Freeze();
+            dc.DrawGeometry(null, LinePen, geometry);
         }
 
-        // Data line
-        int count = data.Count;
-        double step = chartW / Math.Max(count - 1, 1);
+        var hostCanvas = new VisualHost(gridVisual);
+        ChartCanvas.Children.Add(hostCanvas);
 
-        var polyline = new Polyline
-        {
-            Stroke = LineBrush,
-            StrokeThickness = 1.5,
-            StrokeLineJoin = PenLineJoin.Round
-        };
-
-        for (int i = 0; i < count; i++)
-        {
-            double x = margin + i * step;
-            double y = margin + chartH * (1 - Math.Clamp(data[i], 0, 100) / 100.0);
-            polyline.Points.Add(new Point(x, y));
-        }
-
-        ChartCanvas.Children.Add(polyline);
-
-        // Last value
+        // Last value label
         var lastVal = data[^1];
         var brush = lastVal >= 90 ? GoodBrush : lastVal >= 70 ? WarnBrush : BadBrush;
         var valueTxt = new TextBlock
@@ -124,5 +143,22 @@ public partial class YieldChart : UserControl
         Canvas.SetRight(valueTxt, margin);
         Canvas.SetTop(valueTxt, margin);
         ChartCanvas.Children.Add(valueTxt);
+    }
+
+    /// <summary>
+    /// DrawingVisual을 Canvas에 호스팅하기 위한 FrameworkElement
+    /// </summary>
+    private class VisualHost : FrameworkElement
+    {
+        private readonly DrawingVisual _visual;
+
+        public VisualHost(DrawingVisual visual)
+        {
+            _visual = visual;
+            AddVisualChild(visual);
+        }
+
+        protected override int VisualChildrenCount => 1;
+        protected override Visual GetVisualChild(int index) => _visual;
     }
 }
