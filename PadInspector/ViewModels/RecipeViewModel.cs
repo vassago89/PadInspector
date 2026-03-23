@@ -102,6 +102,17 @@ public partial class RecipeViewModel : ObservableObject
         }
 
         var recipe = BuildFromUI();
+        recipe.Name = newName;
+        var validation = RecipeValidationResult.Validate(recipe);
+        if (!validation.IsValid)
+        {
+            foreach (var error in validation.Errors)
+                _logService.Log("ERR", $"레시피 검증 실패: {error}");
+            return;
+        }
+        foreach (var warning in validation.Warnings)
+            _logService.Log("WARN", $"레시피 경고: {warning}");
+
         _recipeService.SaveAs(newName, recipe);
         RecipeChanged?.Invoke(_recipeService.CurrentRecipe);
         _logService.Log("RECIPE", $"레시피 다른이름 저장: {newName}");

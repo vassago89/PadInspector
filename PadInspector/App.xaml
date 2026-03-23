@@ -17,7 +17,7 @@
             <conv:BoolToPassFailConverter x:Key="BoolToPassFail"/>
             <conv:InverseBoolConverter x:Key="InverseBool"/>
             <conv:NullToVisibilityConverter x:Key="NullToVisibility"/>
-            <conv:NullToCollapsedConverter x:Key="NullToCollapsed"/>
+            <conv:NullToVisibleConverter x:Key="NullToCollapsed"/>
 
             <!-- ViewModel -> View mapping -->
             <DataTemplate DataType="{x:Type vm:CameraViewModel}">

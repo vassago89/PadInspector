@@ -12,7 +12,9 @@ public class FakeLogService : ILogService
 
     public void Log(string level, string message)
     {
-        Logs.Add($"[{level}] {message}");
+        var formatted = $"[{level}] {message}";
+        Logs.Add(formatted);
+        Messages.Add(formatted);
         LogEntries.Add(new LogEntry { Timestamp = DateTime.Now, Level = level, Message = message });
     }
 

@@ -50,7 +50,10 @@ public class NullToVisibilityConverter : IValueConverter
         => throw new NotSupportedException();
 }
 
-public class NullToCollapsedConverter : IValueConverter
+/// <summary>
+/// null → Visible, non-null → Collapsed (null일 때 표시)
+/// </summary>
+public class NullToVisibleConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         => value == null ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;

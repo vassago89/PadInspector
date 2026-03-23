@@ -83,8 +83,10 @@ public partial class YieldChart : UserControl
     private void Redraw()
     {
         ChartCanvas.Children.Clear();
-        var data = Data;
-        if (data == null || data.Count < 2) return;
+        var source = Data;
+        if (source == null || source.Count < 2) return;
+        var data = source.ToArray();
+        if (data.Length < 2) return;
 
         double w = ChartCanvas.ActualWidth;
         double h = ChartCanvas.ActualHeight;
@@ -115,7 +117,7 @@ public partial class YieldChart : UserControl
             }
 
             // Data line via StreamGeometry (allocation-efficient)
-            int count = data.Count;
+            int count = data.Length;
             double step = chartW / Math.Max(count - 1, 1);
 
             var geometry = new StreamGeometry();
