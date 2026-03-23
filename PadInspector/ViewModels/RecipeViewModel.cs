@@ -103,7 +103,7 @@ public partial class RecipeViewModel : ObservableObject
 
         var recipe = BuildFromUI();
         _recipeService.SaveAs(newName, recipe);
-        RecipeChanged?.Invoke(recipe);
+        RecipeChanged?.Invoke(_recipeService.CurrentRecipe);
         _logService.Log("RECIPE", $"레시피 다른이름 저장: {newName}");
         RefreshList();
         SetSelectedSilently(newName);

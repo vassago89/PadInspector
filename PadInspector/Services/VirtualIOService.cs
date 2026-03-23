@@ -17,7 +17,7 @@ public class VirtualIOService : IIOService
     private readonly object _lock = new();
     private readonly object _timerLock = new();
     private Timer? _autoTriggerTimer;
-    private bool _isRunning;
+    private volatile bool _isRunning;
 
     public bool IsRunning => _isRunning;
 

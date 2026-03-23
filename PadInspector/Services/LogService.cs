@@ -41,7 +41,7 @@ public class LogService : ILogService
         if (_syncContext == null || SynchronizationContext.Current == _syncContext)
             AddLine(line, entry);
         else
-            _syncContext.Send(_ => AddLine(line, entry), null);
+            _syncContext.Post(_ => AddLine(line, entry), null);
 
         if (_settings.EnableFileLog)
             WriteToFile(line);
