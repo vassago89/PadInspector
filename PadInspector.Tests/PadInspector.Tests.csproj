@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0-windows</TargetFramework>
@@ -17,6 +17,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\PadInspector.Core\PadInspector.Core.csproj" />
+    <ProjectReference Include="..\PadInspector.Hardware\PadInspector.Hardware.csproj" />
     <ProjectReference Include="..\PadInspector\PadInspector.csproj" />
   </ItemGroup>
 

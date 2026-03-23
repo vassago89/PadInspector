@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -13,21 +13,18 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.5" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.5" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.5" />
-    <PackageReference Include="OpenCvSharp4" Version="4.13.0.20260308" />
-    <PackageReference Include="OpenCvSharp4.runtime.win" Version="4.13.0.20260302" />
     <PackageReference Include="OpenCvSharp4.WpfExtensions" Version="4.13.0.20260308" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PadInspector.Core\PadInspector.Core.csproj" />
+    <ProjectReference Include="..\PadInspector.Hardware\PadInspector.Hardware.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="MvCameraControl.Net">
-      <HintPath>C:\Program Files (x86)\MVS\Development\DotNet\AnyCpu\netstandard2.0\MvCameraControl.Net.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>

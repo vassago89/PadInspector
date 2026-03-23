@@ -1,4 +1,6 @@
 <Solution>
-  <Project Path="PadInspector.Tests/PadInspector.Tests.csproj" />
+  <Project Path="PadInspector.Core/PadInspector.Core.csproj" />
+  <Project Path="PadInspector.Hardware/PadInspector.Hardware.csproj" />
   <Project Path="PadInspector/PadInspector.csproj" />
+  <Project Path="PadInspector.Tests/PadInspector.Tests.csproj" />
 </Solution>

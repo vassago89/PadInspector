@@ -30,8 +30,8 @@ MVVM with CommunityToolkit.Mvvm + Microsoft.Extensions.DependencyInjection.
 ### Project Structure
 
 ```
-PadInspector/
-├── Configs/          # IOptions<T> settings classes (8 files)
+PadInspector.Core/          # Platform-independent class library (net10.0)
+├── Configs/                # IOptions<T> settings classes (8 files)
 │   ├── CameraSettings.cs      CamerasSettings, CameraConfig
 │   ├── InspectionSettings.cs
 │   ├── IOSettings.cs           output channel mapping, pulse duration
@@ -40,25 +40,33 @@ PadInspector/
 │   ├── AlarmSettings.cs
 │   ├── LogSettings.cs
 │   └── RecipeSettings.cs       BasePath, DefaultRecipeName
+├── Models/                 # Recipe, InspectionResult, IOSignal, RoiRect, etc.
+└── Services/               # All interfaces + pure .NET implementations
+    ├── I*Service.cs            All 14 service interfaces
+    ├── LogService.cs           SynchronizationContext-based logging
+    ├── RecipeService.cs        JSON recipe persistence + audit
+    ├── CsvResultLogService.cs  CSV result logging
+    ├── StatisticsService.cs    counts, trend, history, per-camera stats
+    ├── VirtualIOService.cs     IO simulation for testing
+    └── AlarmService.cs         consecutive NG tracking
+
+PadInspector.Hardware/      # Hardware/OpenCV class library (net10.0)
+└── Services/               # OpenCV/HIK dependent implementations
+    ├── InspectionService.cs    OpenCV threshold + contour + overlay
+    ├── HikCameraService.cs     MVS SDK wrapper (grab loop, trigger)
+    ├── HikCameraServiceFactory.cs
+    ├── TestImageService.cs     dummy image generation
+    ├── ImageSaveService.cs     NG/OK image file save
+    ├── ImageCleanupService.cs  old image folder cleanup
+    ├── DiskMonitorService.cs   disk space monitoring
+    └── IOOutputService.cs      channel mapping + pulse output
+
+PadInspector/               # WPF application (net10.0-windows)
 ├── Converters/       # BoolToColor, BoolToPassFail, InverseBool
-├── Models/           # Recipe, InspectionResult, IOSignal, RoiRect
 ├── Resources/        # Localization + Styles
 │   ├── Strings.ko.xaml         Korean strings
 │   ├── Strings.en.xaml         English strings
 │   └── Styles.xaml             Color palette, reusable styles (ActionButton, CardPanel, StatCard)
-├── Services/         # Interfaces + implementations (12 pairs)
-│   ├── ICameraService / HikCameraService         (CancellationToken grab loop)
-│   ├── ICameraServiceFactory / HikCameraServiceFactory
-│   ├── IIOService / VirtualIOService
-│   ├── IIOOutputService / IOOutputService         (channel mapping + pulse)
-│   ├── IInspectionService / InspectionService     (overlay drawing)
-│   ├── IRecipeService / RecipeService
-│   ├── IImageSaveService / ImageSaveService
-│   ├── IResultLogService / CsvResultLogService
-│   ├── ILogService / LogService                   (SynchronizationContext-based)
-│   ├── IAlarmService / AlarmService               (consecutive NG tracking)
-│   ├── IStatisticsService / StatisticsService     (counts, trend, history)
-│   └── ITestImageService / TestImageService       (dummy image for virtual mode)
 ├── ViewModels/       # MainViewModel + sub-VMs
 │   ├── MainViewModel.cs        Orchestrator (SynchronizationContext for UI dispatch)
 │   ├── CameraViewModel.cs      Accepts ICameraServiceFactory (not concrete)
@@ -109,10 +117,19 @@ All services and ViewModels are resolved through the DI container in `App.xaml.c
 
 ### Dependencies
 
-- CommunityToolkit.Mvvm 8.4.0
+**PadInspector.Core** (net10.0):
+- Microsoft.Extensions.Options
+
+**PadInspector.Hardware** (net10.0):
 - OpenCvSharp4 4.13.0
-- Microsoft.Extensions.Configuration/DI/Options
 - MvCameraControl.Net.dll (native, from MVS SDK install path)
+- → PadInspector.Core
+
+**PadInspector** (net10.0-windows):
+- CommunityToolkit.Mvvm 8.4.0
+- OpenCvSharp4.WpfExtensions
+- Microsoft.Extensions.Configuration/DI/Options
+- → PadInspector.Core, PadInspector.Hardware
 
 ### Testing
 
