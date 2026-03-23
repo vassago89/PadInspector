@@ -13,7 +13,7 @@ public class AlarmServiceTests
             Enabled = enabled,
             ConsecutiveNgThreshold = threshold
         });
-        var log = new FakeLogService();
+        var log = TestHelper.CreateLogService();
         return new AlarmService(settings, log);
     }
 

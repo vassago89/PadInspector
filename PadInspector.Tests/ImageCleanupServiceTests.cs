@@ -20,7 +20,7 @@ public class ImageCleanupServiceTests
             BasePath = basePath,
             MaxDaysToKeep = maxDays
         });
-        return new ImageCleanupService(settings, new FakeLogService());
+        return new ImageCleanupService(settings, TestHelper.CreateLogService());
     }
 
     [Fact]

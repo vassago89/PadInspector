@@ -19,7 +19,7 @@ public class IOOutputServiceTests
         });
 
         var io = new VirtualIOService(ioSettings);
-        var svc = new IOOutputService(io, new FakeLogService(), ioSettings);
+        var svc = new IOOutputService(io, TestHelper.CreateLogService(), ioSettings);
         return (svc, io);
     }
 
