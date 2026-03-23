@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Options;
-using PadInspector.Configs;
 using PadInspector.Models;
 using PadInspector.Services;
 
@@ -7,16 +5,10 @@ namespace PadInspector.Tests;
 
 public class StatisticsServiceTests
 {
-    private static StatisticsService CreateService(int maxHistory = 100)
-    {
-        var settings = Options.Create(new InspectionSettings { MaxResultHistory = maxHistory });
-        return new StatisticsService(settings);
-    }
-
     [Fact]
     public void AddResult_IncrementsCounts()
     {
-        var svc = CreateService();
+        var svc = TestHelper.CreateStatisticsService();
 
         svc.AddResult(new InspectionResult { IsPass = true });
         svc.AddResult(new InspectionResult { IsPass = false });
@@ -30,7 +22,7 @@ public class StatisticsServiceTests
     [Fact]
     public void PassRate_CalculatesCorrectly()
     {
-        var svc = CreateService();
+        var svc = TestHelper.CreateStatisticsService();
 
         svc.AddResult(new InspectionResult { IsPass = true });
         svc.AddResult(new InspectionResult { IsPass = true });
@@ -42,7 +34,7 @@ public class StatisticsServiceTests
     [Fact]
     public void Results_RespectMaxHistory()
     {
-        var svc = CreateService(maxHistory: 5);
+        var svc = TestHelper.CreateStatisticsService(maxHistory: 5);
 
         for (int i = 0; i < 10; i++)
             svc.AddResult(new InspectionResult { IsPass = true });
@@ -54,7 +46,7 @@ public class StatisticsServiceTests
     [Fact]
     public void Reset_ClearsAll()
     {
-        var svc = CreateService();
+        var svc = TestHelper.CreateStatisticsService();
         svc.AddResult(new InspectionResult { IsPass = true });
         svc.AddResult(new InspectionResult { IsPass = false });
 
@@ -71,7 +63,7 @@ public class StatisticsServiceTests
     [Fact]
     public void YieldTrend_AddsEntries()
     {
-        var svc = CreateService();
+        var svc = TestHelper.CreateStatisticsService();
         svc.AddResult(new InspectionResult { IsPass = true });
         svc.AddResult(new InspectionResult { IsPass = false });
 
@@ -81,7 +73,7 @@ public class StatisticsServiceTests
     [Fact]
     public void Updated_EventFires()
     {
-        var svc = CreateService();
+        var svc = TestHelper.CreateStatisticsService();
         int fireCount = 0;
         svc.Updated += () => fireCount++;
 

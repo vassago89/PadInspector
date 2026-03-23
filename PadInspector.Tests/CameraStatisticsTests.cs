@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Options;
-using PadInspector.Configs;
 using PadInspector.Models;
 using PadInspector.Services;
 
@@ -7,16 +5,10 @@ namespace PadInspector.Tests;
 
 public class CameraStatisticsTests
 {
-    private static StatisticsService CreateService(int maxHistory = 100)
-    {
-        var settings = Options.Create(new InspectionSettings { MaxResultHistory = maxHistory });
-        return new StatisticsService(settings);
-    }
-
     [Fact]
     public void AddResult_TracksCameraStats()
     {
-        var svc = CreateService();
+        var svc = TestHelper.CreateStatisticsService();
 
         svc.AddResult(new InspectionResult { CameraName = "CAM1", IsPass = true });
         svc.AddResult(new InspectionResult { CameraName = "CAM1", IsPass = false });
@@ -35,7 +27,7 @@ public class CameraStatisticsTests
     [Fact]
     public void GetCameraStats_Unknown_ReturnsEmpty()
     {
-        var svc = CreateService();
+        var svc = TestHelper.CreateStatisticsService();
         var stats = svc.GetCameraStats("UNKNOWN");
         Assert.Equal(0, stats.TotalCount);
     }
@@ -43,7 +35,7 @@ public class CameraStatisticsTests
     [Fact]
     public void Reset_ClearsCameraStats()
     {
-        var svc = CreateService();
+        var svc = TestHelper.CreateStatisticsService();
         svc.AddResult(new InspectionResult { CameraName = "CAM1", IsPass = true });
         svc.Reset();
 

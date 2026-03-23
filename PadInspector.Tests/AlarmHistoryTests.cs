@@ -1,25 +1,13 @@
-using Microsoft.Extensions.Options;
-using PadInspector.Configs;
 using PadInspector.Services;
 
 namespace PadInspector.Tests;
 
 public class AlarmHistoryTests
 {
-    private static AlarmService CreateService(int threshold = 3)
-    {
-        var settings = Options.Create(new AlarmSettings
-        {
-            Enabled = true,
-            ConsecutiveNgThreshold = threshold
-        });
-        return new AlarmService(settings, TestHelper.CreateLogService());
-    }
-
     [Fact]
     public void AlarmTriggered_AddsToHistory()
     {
-        var svc = CreateService(threshold: 2);
+        var svc = TestHelper.CreateAlarmService(threshold: 2);
 
         svc.CheckResult("CAM1", false);
         svc.CheckResult("CAM1", false);
@@ -32,7 +20,7 @@ public class AlarmHistoryTests
     [Fact]
     public void Clear_SetsClearedTimestamp()
     {
-        var svc = CreateService(threshold: 1);
+        var svc = TestHelper.CreateAlarmService(threshold: 1);
         svc.CheckResult("CAM1", false);
         Assert.Null(svc.AlarmHistory[0].ClearedAt);
 
@@ -43,7 +31,7 @@ public class AlarmHistoryTests
     [Fact]
     public void Reset_ClearsHistory()
     {
-        var svc = CreateService(threshold: 1);
+        var svc = TestHelper.CreateAlarmService(threshold: 1);
         svc.CheckResult("CAM1", false);
         Assert.Single(svc.AlarmHistory);
 
@@ -54,7 +42,7 @@ public class AlarmHistoryTests
     [Fact]
     public void MultipleAlarms_TracksSeparately()
     {
-        var svc = CreateService(threshold: 1);
+        var svc = TestHelper.CreateAlarmService(threshold: 1);
 
         svc.CheckResult("CAM1", false);
         svc.Clear();
