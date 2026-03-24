@@ -96,7 +96,7 @@ public partial class StatisticsViewModel : ObservableObject, IDisposable
                 writer.WriteLine(string.Join(",",
                     r.Id, r.CameraName, r.IsPass ? "PASS" : "FAIL",
                     r.Score, r.PadCount, r.Timestamp.ToString("HH:mm:ss.fff"),
-                    EscapeCsv(r.Description), EscapeCsv(r.ImagePath)));
+                    CsvHelper.Escape(r.Description), CsvHelper.Escape(r.ImagePath)));
             }
             _logService.Log("INFO", $"리포트 내보내기: {dialog.FileName}");
         }
@@ -104,13 +104,6 @@ public partial class StatisticsViewModel : ObservableObject, IDisposable
         {
             _logService.Log("ERR", $"리포트 내보내기 실패: {ex.Message}");
         }
-    }
-
-    private static string EscapeCsv(string value)
-    {
-        if (value.Contains('"') || value.Contains(',') || value.Contains('\n'))
-            return $"\"{value.Replace("\"", "\"\"")}\"";
-        return $"\"{value}\"";
     }
 
     public void AddResult(InspectionResult result) => _statisticsService.AddResult(result);

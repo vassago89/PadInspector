@@ -13,8 +13,6 @@ public class CsvResultLogService : IResultLogService, IDisposable
     private string? _currentDate;
     private StreamWriter? _writer;
     private int _consecutiveFailures;
-
-    public int ConsecutiveWriteFailures => _consecutiveFailures;
     public event Action<string>? WriteError;
 
     public CsvResultLogService(IOptions<CsvLogSettings> options)
@@ -40,8 +38,8 @@ public class CsvResultLogService : IResultLogService, IDisposable
                     result.CameraName,
                     result.IsPass ? "PASS" : "FAIL",
                     result.Score,
-                    EscapeCsv(result.Description),
-                    EscapeCsv(result.ImagePath)));
+                    CsvHelper.Escape(result.Description),
+                    CsvHelper.Escape(result.ImagePath)));
                 _writer?.Flush();
                 _consecutiveFailures = 0;
             }
@@ -70,13 +68,6 @@ public class CsvResultLogService : IResultLogService, IDisposable
             _writer.WriteLine("DateTime,Id,Camera,Result,Score,Description,ImagePath");
             _writer.Flush();
         }
-    }
-
-    private static string EscapeCsv(string value)
-    {
-        if (value.Contains('"') || value.Contains(',') || value.Contains('\n'))
-            return $"\"{value.Replace("\"", "\"\"")}\"";
-        return $"\"{value}\"";
     }
 
     public void Dispose()

@@ -52,9 +52,7 @@ public class VirtualIOService : IIOService
         TriggerReceived?.Invoke(this, new IOSignal
         {
             Channel = channel,
-            IsOn = true,
-            Name = $"TRIGGER_IN_{channel}",
-            Timestamp = DateTime.Now
+            IsOn = true
         });
 
         _ = ResetInputAfterDelayAsync(channel);

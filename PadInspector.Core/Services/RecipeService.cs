@@ -19,10 +19,6 @@ public class RecipeService : IRecipeService
     private readonly string _recipeDir;
     private readonly string _defaultName;
     private readonly List<string> _recipeNames = [];
-    private readonly List<RecipeAuditEntry> _auditLog = [];
-
-    public IReadOnlyList<RecipeAuditEntry> AuditLog => _auditLog;
-
     public Recipe CurrentRecipe { get; private set; } = new();
     public IReadOnlyList<string> RecipeNames => _recipeNames;
 
@@ -67,7 +63,6 @@ public class RecipeService : IRecipeService
             if (recipe == null) return;
 
             CurrentRecipe = recipe;
-            AddAudit("Load", name, $"Threshold={recipe.ThresholdValue}, PassScore={recipe.PassScoreThreshold}");
             RecipeChanged?.Invoke(this, recipe);
         }
         catch (Exception ex)
@@ -93,7 +88,6 @@ public class RecipeService : IRecipeService
 
         var json = JsonSerializer.Serialize(recipe, JsonOptions);
         File.WriteAllText(path, json);
-        AddAudit("Save", recipe.Name, $"Threshold={recipe.ThresholdValue}, PassScore={recipe.PassScoreThreshold}");
 
         if (!_recipeNames.Contains(recipe.Name))
         {
@@ -127,22 +121,6 @@ public class RecipeService : IRecipeService
         }
 
         _recipeNames.Remove(name);
-        AddAudit("Delete", name);
-    }
-
-    private void AddAudit(string action, string recipeName, string details = "")
-    {
-        _auditLog.Add(new RecipeAuditEntry
-        {
-            Timestamp = DateTime.Now,
-            Action = action,
-            RecipeName = recipeName,
-            Details = details
-        });
-
-        // 최대 500개 이력 유지
-        if (_auditLog.Count > 500)
-            _auditLog.RemoveAt(0);
     }
 
     private string GetPath(string name) => Path.Combine(_recipeDir, $"{name}.json");
